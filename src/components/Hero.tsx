@@ -96,6 +96,23 @@ const Hero = () => {
             </div>
             
             <div className="overflow-hidden">
+              <div 
+                className={`text-center lg:text-left mb-2 transition-all duration-1000 delay-50 ${
+                  isLoaded ? 'opacity-100 transform-none' : 'opacity-0 transform translate-y-10'
+                }`}
+              >
+                <div className="flex flex-col md:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 mb-2">
+                  <img 
+                    src="/mce.png" 
+                    alt="MCE Logo" 
+                    className="h-14 md:h-16 object-contain"
+                  />
+                  <div>
+                    <h2 className="text-xl md:text-2xl font-semibold text-white">MEENAKSHI COLLEGE OF ENGINEERING</h2>
+                    <p className="text-sm md:text-base text-gray-300">#12, Vembuliamman Kovil Street, West K.K.Nagar Chennai-600078</p>
+                  </div>
+                </div>
+              </div>
               <h1 
                 className={`text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-4 transition-all duration-1000 delay-100 ${
                   isLoaded ? 'opacity-100 transform-none' : 'opacity-0 transform translate-y-10'

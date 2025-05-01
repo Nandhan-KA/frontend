@@ -14,7 +14,12 @@ import {
   Users,
   AlertCircle,
   Info,
-  CheckCircle
+  CheckCircle,
+  ListChecks,
+  Award,
+  Phone,
+  Clock,
+  FileText
 } from 'lucide-react';
 import { adminApi } from '../services/api';
 
@@ -47,6 +52,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 interface Event {
   _id: string;
@@ -65,8 +76,23 @@ interface Event {
     max: number;
   };
   capacity: number;
-  prizes: string[];
+  prizes: {
+    first: string;
+    second: string;
+    third: string;
+    other: string;
+  };
+  rules: string[];
   requirements: string[];
+  aboutContent?: string;
+  detailsContent?: string;
+  coordinators?: {
+    name: string;
+    contact: string;
+    email?: string;
+  }[];
+  startTime?: string;
+  endTime?: string;
   isActive: boolean;
 }
 
@@ -109,10 +135,22 @@ const AdminEvents = () => {
       min: 1,
       max: 1
     },
-    prizes: [],
+    prizes: {
+      first: '',
+      second: '',
+      third: '',
+      other: ''
+    },
+    rules: [],
     requirements: [],
+    aboutContent: '',
+    detailsContent: '',
+    coordinators: [],
+    startTime: '',
+    endTime: '',
     isActive: true
   });
+  const [formTab, setFormTab] = useState("basic");
   
   const navigate = useNavigate();
 
@@ -158,8 +196,14 @@ const AdminEvents = () => {
         isTeamEvent: event.isTeamEvent || false,
         teamSize: event.teamSize || { min: 1, max: 1 },
         capacity: event.capacity || 50,
-        prizes: event.prizes || [],
+        prizes: event.prizes || { first: '', second: '', third: '', other: '' },
+        rules: event.rules || [],
         requirements: event.requirements || [],
+        aboutContent: event.aboutContent,
+        detailsContent: event.detailsContent,
+        coordinators: event.coordinators || [],
+        startTime: event.startTime,
+        endTime: event.endTime,
         isActive: event.isActive !== false
       }));
       
@@ -237,11 +281,23 @@ const AdminEvents = () => {
         min: 1,
         max: 1
       },
-      prizes: [],
+      prizes: {
+        first: '',
+        second: '',
+        third: '',
+        other: ''
+      },
+      rules: [],
       requirements: [],
+      aboutContent: '',
+      detailsContent: '',
+      coordinators: [],
+      startTime: '',
+      endTime: '',
       isActive: true
     });
     setFormErrors({});
+    setFormTab("basic");
   };
 
   const validateForm = (): boolean => {
@@ -337,8 +393,14 @@ const AdminEvents = () => {
         min: 1,
         max: event.teamSize?.max || 1
       },
-      prizes: [],
-      requirements: [],
+      prizes: event.prizes || { first: '', second: '', third: '', other: '' },
+      rules: event.rules || [],
+      requirements: event.requirements || [],
+      aboutContent: event.aboutContent,
+      detailsContent: event.detailsContent,
+      coordinators: event.coordinators || [],
+      startTime: event.startTime,
+      endTime: event.endTime,
       isActive: true
     });
     setFormErrors({});
@@ -373,8 +435,14 @@ const AdminEvents = () => {
           max: formData.isTeamEvent ? 
             (isNaN(formData.teamSize.max) ? 1 : formData.teamSize.max) : 1
         },
-        prizes: formData.prizes || [],
-        requirements: formData.requirements || [],
+        prizes: formData.prizes,
+        rules: formData.rules,
+        requirements: formData.requirements,
+        aboutContent: formData.aboutContent,
+        detailsContent: formData.detailsContent,
+        coordinators: formData.coordinators,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
         isActive: true
       };
       
@@ -422,8 +490,14 @@ const AdminEvents = () => {
           max: formData.isTeamEvent ? 
             (isNaN(formData.teamSize.max) ? 1 : formData.teamSize.max) : 1
         },
-        prizes: formData.prizes || [],
-        requirements: formData.requirements || [],
+        prizes: formData.prizes,
+        rules: formData.rules,
+        requirements: formData.requirements,
+        aboutContent: formData.aboutContent,
+        detailsContent: formData.detailsContent,
+        coordinators: formData.coordinators,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
         isActive: true
       };
       
@@ -697,7 +771,7 @@ const AdminEvents = () => {
       
       {/* Create Event Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Event</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -705,245 +779,512 @@ const AdminEvents = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2">
-              <Label htmlFor="name" className="flex items-center justify-between">
-                Event Name
-                {formErrors.name && (
-                  <span className="text-red-400 text-xs">{formErrors.name}</span>
-                )}
-              </Label>
-              <Input
-                id="name"
-                name="title"
-                placeholder="Enter event name"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.name ? 'border-red-400' : ''}`}
-                value={formData.title}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label htmlFor="description" className="flex items-center justify-between">
-                Description
-                {formErrors.description && (
-                  <span className="text-red-400 text-xs">{formErrors.description}</span>
-                )}
-              </Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Enter event description"
-                className={`bg-gray-700 border-gray-600 mt-1 min-h-[100px] ${formErrors.description ? 'border-red-400' : ''}`}
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="date" className="flex items-center justify-between">
-                Date
-                {formErrors.date && (
-                  <span className="text-red-400 text-xs">{formErrors.date}</span>
-                )}
-              </Label>
-              <Input
-                id="date"
-                name="date"
-                type="date"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.date ? 'border-red-400' : ''}`}
-                value={formData.date}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="location" className="flex items-center justify-between">
-                Location
-                {formErrors.location && (
-                  <span className="text-red-400 text-xs">{formErrors.location}</span>
-                )}
-              </Label>
-              <Input
-                id="location"
-                name="location"
-                placeholder="Enter event location"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.location ? 'border-red-400' : ''}`}
-                value={formData.location}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select 
-                value={formData.eventType} 
-                onValueChange={(value) => handleSelectChange('eventType', value)}
-              >
-                <SelectTrigger className="bg-gray-700 border-gray-600 mt-1">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-700 border-gray-600">
-                  <SelectItem value="competition">Competition</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
-                  <SelectItem value="hackathon">Hackathon</SelectItem>
-                  <SelectItem value="talk">Talk</SelectItem>
-                  <SelectItem value="panel">Panel</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="price" className="flex items-center justify-between">
-                Price (₹)
-                {formErrors.price && (
-                  <span className="text-red-400 text-xs">{formErrors.price}</span>
-                )}
-              </Label>
-              <Input
-                id="price"
-                name="registrationFee"
-                type="number"
-                min="0"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
-                value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
-                onChange={handleNumberChange}
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label htmlFor="image" className="flex items-center justify-between">
-                Image URL
-                {formErrors.image && (
-                  <span className="text-red-400 text-xs">{formErrors.image}</span>
-                )}
-              </Label>
-              <Input
-                id="image"
-                name="image"
-                placeholder="Enter image URL"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
-                value={formData.image}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            {formData.registrationFee > 0 && (
-              <div className="col-span-2">
-                <Label htmlFor="qrCode" className="flex items-center justify-between">
-                  Payment QR Code URL
-                  {formErrors.qrCode && (
-                    <span className="text-red-400 text-xs">{formErrors.qrCode}</span>
-                  )}
-                </Label>
-                <div className="grid grid-cols-2 gap-4">
+          <Tabs value={formTab} onValueChange={setFormTab} className="mt-4">
+            <TabsList className="grid grid-cols-5 bg-gray-700 p-1 rounded-md mb-4">
+              <TabsTrigger value="basic" className="data-[state=active]:bg-gray-600">
+                <FileText size={14} className="mr-1" /> Basic Info
+              </TabsTrigger>
+              <TabsTrigger value="about" className="data-[state=active]:bg-gray-600">
+                <Info size={14} className="mr-1" /> About
+              </TabsTrigger>
+              <TabsTrigger value="details" className="data-[state=active]:bg-gray-600">
+                <Calendar size={14} className="mr-1" /> Details
+              </TabsTrigger>
+              <TabsTrigger value="rules" className="data-[state=active]:bg-gray-600">
+                <ListChecks size={14} className="mr-1" /> Rules
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="data-[state=active]:bg-gray-600">
+                <Phone size={14} className="mr-1" /> Contact
+              </TabsTrigger>
+            </TabsList>
+          
+            <TabsContent value="basic" className="space-y-4 mt-2">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="name" className="flex items-center justify-between">
+                    Event Name
+                    {formErrors.name && (
+                      <span className="text-red-400 text-xs">{formErrors.name}</span>
+                    )}
+                  </Label>
                   <Input
-                    id="qrCode"
-                    name="qrCode"
-                    placeholder="Enter payment QR code URL"
-                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
-                    value={formData.qrCode}
+                    id="name"
+                    name="title"
+                    placeholder="Enter event name"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.name ? 'border-red-400' : ''}`}
+                    value={formData.title}
                     onChange={handleInputChange}
                   />
-                  {formData.qrCode && (
-                    <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
-                      <img 
-                        src={formData.qrCode} 
-                        alt="Payment QR Code Preview" 
-                        className="max-h-24 object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
-                        }}
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="description" className="flex items-center justify-between">
+                    Short Description
+                    {formErrors.description && (
+                      <span className="text-red-400 text-xs">{formErrors.description}</span>
+                    )}
+                  </Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    placeholder="Enter a brief description for event listings"
+                    className={`bg-gray-700 border-gray-600 mt-1 min-h-[100px] ${formErrors.description ? 'border-red-400' : ''}`}
+                    value={formData.description}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="date" className="flex items-center justify-between">
+                    Date
+                    {formErrors.date && (
+                      <span className="text-red-400 text-xs">{formErrors.date}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="date"
+                    name="date"
+                    type="date"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.date ? 'border-red-400' : ''}`}
+                    value={formData.date}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="location" className="flex items-center justify-between">
+                    Location
+                    {formErrors.location && (
+                      <span className="text-red-400 text-xs">{formErrors.location}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    placeholder="Enter event location"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.location ? 'border-red-400' : ''}`}
+                    value={formData.location}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select 
+                    value={formData.eventType} 
+                    onValueChange={(value) => handleSelectChange('eventType', value)}
+                  >
+                    <SelectTrigger className="bg-gray-700 border-gray-600 mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="competition">Competition</SelectItem>
+                      <SelectItem value="workshop">Workshop</SelectItem>
+                      <SelectItem value="hackathon">Hackathon</SelectItem>
+                      <SelectItem value="talk">Talk</SelectItem>
+                      <SelectItem value="panel">Panel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="price" className="flex items-center justify-between">
+                    Price (₹)
+                    {formErrors.price && (
+                      <span className="text-red-400 text-xs">{formErrors.price}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="price"
+                    name="registrationFee"
+                    type="number"
+                    min="0"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
+                    value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
+                    onChange={handleNumberChange}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="image" className="flex items-center justify-between">
+                    Image URL
+                    {formErrors.image && (
+                      <span className="text-red-400 text-xs">{formErrors.image}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="image"
+                    name="image"
+                    placeholder="Enter image URL"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
+                    value={formData.image}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                {formData.registrationFee > 0 && (
+                  <div className="col-span-2">
+                    <Label htmlFor="qrCode" className="flex items-center justify-between">
+                      Payment QR Code URL
+                      {formErrors.qrCode && (
+                        <span className="text-red-400 text-xs">{formErrors.qrCode}</span>
+                      )}
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        id="qrCode"
+                        name="qrCode"
+                        placeholder="Enter payment QR code URL"
+                        className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
+                        value={formData.qrCode}
+                        onChange={handleInputChange}
                       />
+                      {formData.qrCode && (
+                        <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
+                          <img 
+                            src={formData.qrCode} 
+                            alt="Payment QR Code Preview" 
+                            className="max-h-24 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
+                  </div>
+                )}
+                
+                {formData.registrationFee > 0 && (
+                  <div className="col-span-2">
+                    <Label htmlFor="upiId" className="flex items-center justify-between">
+                      UPI ID
+                      {formErrors.upiId && (
+                        <span className="text-red-400 text-xs">{formErrors.upiId}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="upiId"
+                      name="upiId"
+                      placeholder="Enter UPI ID (e.g., username@bankname)"
+                      className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
+                      value={formData.upiId}
+                      onChange={handleInputChange}
+                    />
+                    <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="isTeamEvent"
+                    name="isTeamEvent"
+                    checked={formData.isTeamEvent}
+                    onChange={handleCheckboxChange}
+                    className="rounded text-amber-600 bg-gray-700 border-gray-500"
+                  />
+                  <Label htmlFor="isTeamEvent">Team Event</Label>
+                </div>
+                
+                {formData.isTeamEvent && (
+                  <div>
+                    <Label htmlFor="maxTeamSize" className="flex items-center justify-between">
+                      Max Team Size
+                      {formErrors.maxTeamSize && (
+                        <span className="text-red-400 text-xs">{formErrors.maxTeamSize}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="maxTeamSize"
+                      name="teamSize.max"
+                      type="number"
+                      min="2"
+                      max="10"
+                      className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.maxTeamSize ? 'border-red-400' : ''}`}
+                      value={isNaN(formData.teamSize.max) ? '' : formData.teamSize.max}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        const parsedValue = value === '' ? 1 : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          teamSize: {
+                            ...prev.teamSize,
+                            max: isNaN(parsedValue) ? 1 : parsedValue
+                          }
+                        }));
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="capacity" className="flex items-center justify-between">
+                    Capacity
+                    {formErrors.capacity && (
+                      <span className="text-red-400 text-xs">{formErrors.capacity}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="capacity"
+                    name="capacity"
+                    type="number"
+                    min="1"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.capacity ? 'border-red-400' : ''}`}
+                    value={isNaN(formData.capacity) ? '' : formData.capacity}
+                    onChange={handleNumberChange}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="about" className="space-y-4 mt-2">
+              <div>
+                <Label htmlFor="aboutContent" className="text-lg font-semibold mb-2 block">
+                  About Content
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Provide detailed information about the event, its purpose, and what participants can expect.
+                </p>
+                <Textarea
+                  id="aboutContent"
+                  name="aboutContent"
+                  placeholder="Enter detailed about information for the event"
+                  className="bg-gray-700 border-gray-600 min-h-[250px] w-full"
+                  value={formData.aboutContent}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="details" className="space-y-4 mt-2">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    id="startTime"
+                    name="startTime"
+                    type="time"
+                    className="bg-gray-700 border-gray-600 mt-1"
+                    value={formData.startTime}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    id="endTime"
+                    name="endTime"
+                    type="time"
+                    className="bg-gray-700 border-gray-600 mt-1"
+                    value={formData.endTime}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="detailsContent" className="text-lg font-semibold mb-2 block">
+                  Additional Details
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Provide any additional information specific to this event, such as format, schedule, or requirements.
+                </p>
+                <Textarea
+                  id="detailsContent"
+                  name="detailsContent"
+                  placeholder="Enter additional details for the event"
+                  className="bg-gray-700 border-gray-600 min-h-[200px] w-full"
+                  value={formData.detailsContent}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="rules" className="space-y-4 mt-2">
+              <div>
+                <Label className="text-lg font-semibold mb-2 block">
+                  Event Rules
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Add rules for your event. Click the "Add Rule" button to add a new rule.
+                </p>
+                
+                <div className="space-y-3 max-h-[400px] overflow-y-auto p-2">
+                  {formData.rules.map((rule, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={rule}
+                        onChange={(e) => {
+                          const newRules = [...formData.rules];
+                          newRules[index] = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: newRules
+                          }));
+                        }}
+                        className="bg-gray-700 border-gray-600 flex-grow"
+                        placeholder={`Rule ${index + 1}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="border-gray-600"
+                        onClick={() => {
+                          const newRules = formData.rules.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: newRules
+                          }));
+                        }}
+                      >
+                        <Trash2 size={16} className="text-red-400" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  {formData.rules.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      No rules added yet
                     </div>
                   )}
                 </div>
-                <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
-              </div>
-            )}
-            
-            {formData.registrationFee > 0 && (
-              <div className="col-span-2">
-                <Label htmlFor="upiId" className="flex items-center justify-between">
-                  UPI ID
-                  {formErrors.upiId && (
-                    <span className="text-red-400 text-xs">{formErrors.upiId}</span>
-                  )}
-                </Label>
-                <Input
-                  id="upiId"
-                  name="upiId"
-                  placeholder="Enter UPI ID (e.g., username@bankname)"
-                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
-                  value={formData.upiId}
-                  onChange={handleInputChange}
-                />
-                <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
-              </div>
-            )}
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isTeamEvent"
-                name="isTeamEvent"
-                checked={formData.isTeamEvent}
-                onChange={handleCheckboxChange}
-                className="rounded text-amber-600 bg-gray-700 border-gray-500"
-              />
-              <Label htmlFor="isTeamEvent">Team Event</Label>
-            </div>
-            
-            {formData.isTeamEvent && (
-              <div>
-                <Label htmlFor="maxTeamSize" className="flex items-center justify-between">
-                  Max Team Size
-                  {formErrors.maxTeamSize && (
-                    <span className="text-red-400 text-xs">{formErrors.maxTeamSize}</span>
-                  )}
-                </Label>
-                <Input
-                  id="maxTeamSize"
-                  name="teamSize.max"
-                  type="number"
-                  min="2"
-                  max="10"
-                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.maxTeamSize ? 'border-red-400' : ''}`}
-                  value={isNaN(formData.teamSize.max) ? '' : formData.teamSize.max}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    const parsedValue = value === '' ? 1 : parseInt(value, 10);
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                  onClick={() => {
                     setFormData(prev => ({
                       ...prev,
-                      teamSize: {
-                        ...prev.teamSize,
-                        max: isNaN(parsedValue) ? 1 : parsedValue
-                      }
+                      rules: [...prev.rules, '']
                     }));
                   }}
-                />
+                >
+                  <Plus size={16} className="mr-2" /> Add Rule
+                </Button>
               </div>
-            )}
+            </TabsContent>
             
-            <div>
-              <Label htmlFor="capacity" className="flex items-center justify-between">
-                Capacity
-                {formErrors.capacity && (
-                  <span className="text-red-400 text-xs">{formErrors.capacity}</span>
-                )}
-              </Label>
-              <Input
-                id="capacity"
-                name="capacity"
-                type="number"
-                min="1"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.capacity ? 'border-red-400' : ''}`}
-                value={isNaN(formData.capacity) ? '' : formData.capacity}
-                onChange={handleNumberChange}
-              />
-            </div>
-          </div>
+            <TabsContent value="contact" className="space-y-4 mt-2">
+              <div>
+                <Label className="text-lg font-semibold mb-2 block">
+                  Event Coordinators
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Add contact persons for this event. Click the "Add Coordinator" button to add a new contact.
+                </p>
+                
+                <div className="space-y-4 max-h-[400px] overflow-y-auto p-2">
+                  {formData.coordinators && formData.coordinators.map((coordinator, index) => (
+                    <div key={index} className="p-4 bg-gray-700/50 rounded-md relative">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="absolute top-2 right-2 border-gray-600 h-7 w-7"
+                        onClick={() => {
+                          const newCoordinators = formData.coordinators.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            coordinators: newCoordinators
+                          }));
+                        }}
+                      >
+                        <Trash2 size={14} className="text-red-400" />
+                      </Button>
+                      
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div>
+                          <Label htmlFor={`coordinator-${index}-name`}>Name</Label>
+                          <Input
+                            id={`coordinator-${index}-name`}
+                            value={coordinator.name}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                name: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`coordinator-${index}-contact`}>Contact Number</Label>
+                          <Input
+                            id={`coordinator-${index}-contact`}
+                            value={coordinator.contact}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                contact: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter contact number"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor={`coordinator-${index}-email`}>Email (Optional)</Label>
+                          <Input
+                            id={`coordinator-${index}-email`}
+                            value={coordinator.email || ''}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                email: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter email"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {(!formData.coordinators || formData.coordinators.length === 0) && (
+                    <div className="text-center py-4 text-gray-500">
+                      No coordinators added yet
+                    </div>
+                  )}
+                </div>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      coordinators: [...(prev.coordinators || []), { name: '', contact: '', email: '' }]
+                    }));
+                  }}
+                >
+                  <Plus size={16} className="mr-2" /> Add Coordinator
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
           
           <DialogFooter>
             <Button 
@@ -974,7 +1315,7 @@ const AdminEvents = () => {
       
       {/* Edit Event Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -982,245 +1323,512 @@ const AdminEvents = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <div className="col-span-2">
-              <Label htmlFor="edit-name" className="flex items-center justify-between">
-                Event Name
-                {formErrors.name && (
-                  <span className="text-red-400 text-xs">{formErrors.name}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-name"
-                name="title"
-                placeholder="Enter event name"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.name ? 'border-red-400' : ''}`}
-                value={formData.title}
-                onChange={handleInputChange}
-              />
-            </div>
+          <Tabs value={formTab} onValueChange={setFormTab} className="mt-4">
+            <TabsList className="grid grid-cols-5 bg-gray-700 p-1 rounded-md mb-4">
+              <TabsTrigger value="basic" className="data-[state=active]:bg-gray-600">
+                <FileText size={14} className="mr-1" /> Basic Info
+              </TabsTrigger>
+              <TabsTrigger value="about" className="data-[state=active]:bg-gray-600">
+                <Info size={14} className="mr-1" /> About
+              </TabsTrigger>
+              <TabsTrigger value="details" className="data-[state=active]:bg-gray-600">
+                <Calendar size={14} className="mr-1" /> Details
+              </TabsTrigger>
+              <TabsTrigger value="rules" className="data-[state=active]:bg-gray-600">
+                <ListChecks size={14} className="mr-1" /> Rules
+              </TabsTrigger>
+              <TabsTrigger value="contact" className="data-[state=active]:bg-gray-600">
+                <Phone size={14} className="mr-1" /> Contact
+              </TabsTrigger>
+            </TabsList>
             
-            <div className="col-span-2">
-              <Label htmlFor="edit-description" className="flex items-center justify-between">
-                Description
-                {formErrors.description && (
-                  <span className="text-red-400 text-xs">{formErrors.description}</span>
-                )}
-              </Label>
-              <Textarea
-                id="edit-description"
-                name="description"
-                placeholder="Enter event description"
-                className={`bg-gray-700 border-gray-600 mt-1 min-h-[100px] ${formErrors.description ? 'border-red-400' : ''}`}
-                value={formData.description}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-date" className="flex items-center justify-between">
-                Date
-                {formErrors.date && (
-                  <span className="text-red-400 text-xs">{formErrors.date}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-date"
-                name="date"
-                type="date"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.date ? 'border-red-400' : ''}`}
-                value={formData.date}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-location" className="flex items-center justify-between">
-                Location
-                {formErrors.location && (
-                  <span className="text-red-400 text-xs">{formErrors.location}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-location"
-                name="location"
-                placeholder="Enter event location"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.location ? 'border-red-400' : ''}`}
-                value={formData.location}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-category">Category</Label>
-              <Select 
-                value={formData.eventType} 
-                onValueChange={(value) => handleSelectChange('eventType', value)}
-              >
-                <SelectTrigger className="bg-gray-700 border-gray-600 mt-1">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-700 border-gray-600">
-                  <SelectItem value="competition">Competition</SelectItem>
-                  <SelectItem value="workshop">Workshop</SelectItem>
-                  <SelectItem value="hackathon">Hackathon</SelectItem>
-                  <SelectItem value="talk">Talk</SelectItem>
-                  <SelectItem value="panel">Panel</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="edit-price" className="flex items-center justify-between">
-                Price (₹)
-                {formErrors.price && (
-                  <span className="text-red-400 text-xs">{formErrors.price}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-price"
-                name="registrationFee"
-                type="number"
-                min="0"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
-                value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
-                onChange={handleNumberChange}
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label htmlFor="edit-image" className="flex items-center justify-between">
-                Image URL
-                {formErrors.image && (
-                  <span className="text-red-400 text-xs">{formErrors.image}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-image"
-                name="image"
-                placeholder="Enter image URL"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
-                value={formData.image}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            {formData.registrationFee > 0 && (
-              <div className="col-span-2">
-                <Label htmlFor="edit-qrCode" className="flex items-center justify-between">
-                  Payment QR Code URL
-                  {formErrors.qrCode && (
-                    <span className="text-red-400 text-xs">{formErrors.qrCode}</span>
-                  )}
-                </Label>
-                <div className="grid grid-cols-2 gap-4">
+            <TabsContent value="basic">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label htmlFor="edit-name" className="flex items-center justify-between">
+                    Event Name
+                    {formErrors.name && (
+                      <span className="text-red-400 text-xs">{formErrors.name}</span>
+                    )}
+                  </Label>
                   <Input
-                    id="edit-qrCode"
-                    name="qrCode"
-                    placeholder="Enter payment QR code URL"
-                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
-                    value={formData.qrCode}
+                    id="edit-name"
+                    name="title"
+                    placeholder="Enter event name"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.name ? 'border-red-400' : ''}`}
+                    value={formData.title}
                     onChange={handleInputChange}
                   />
-                  {formData.qrCode && (
-                    <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
-                      <img 
-                        src={formData.qrCode} 
-                        alt="Payment QR Code Preview" 
-                        className="max-h-24 object-contain"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
-                        }}
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="edit-description" className="flex items-center justify-between">
+                    Short Description
+                    {formErrors.description && (
+                      <span className="text-red-400 text-xs">{formErrors.description}</span>
+                    )}
+                  </Label>
+                  <Textarea
+                    id="edit-description"
+                    name="description"
+                    placeholder="Enter a brief description for event listings"
+                    className={`bg-gray-700 border-gray-600 mt-1 min-h-[100px] ${formErrors.description ? 'border-red-400' : ''}`}
+                    value={formData.description}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-date" className="flex items-center justify-between">
+                    Date
+                    {formErrors.date && (
+                      <span className="text-red-400 text-xs">{formErrors.date}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-date"
+                    name="date"
+                    type="date"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.date ? 'border-red-400' : ''}`}
+                    value={formData.date}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-location" className="flex items-center justify-between">
+                    Location
+                    {formErrors.location && (
+                      <span className="text-red-400 text-xs">{formErrors.location}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-location"
+                    name="location"
+                    placeholder="Enter event location"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.location ? 'border-red-400' : ''}`}
+                    value={formData.location}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-category">Category</Label>
+                  <Select 
+                    value={formData.eventType} 
+                    onValueChange={(value) => handleSelectChange('eventType', value)}
+                  >
+                    <SelectTrigger className="bg-gray-700 border-gray-600 mt-1">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-gray-700 border-gray-600">
+                      <SelectItem value="competition">Competition</SelectItem>
+                      <SelectItem value="workshop">Workshop</SelectItem>
+                      <SelectItem value="hackathon">Hackathon</SelectItem>
+                      <SelectItem value="talk">Talk</SelectItem>
+                      <SelectItem value="panel">Panel</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="edit-price" className="flex items-center justify-between">
+                    Price (₹)
+                    {formErrors.price && (
+                      <span className="text-red-400 text-xs">{formErrors.price}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-price"
+                    name="registrationFee"
+                    type="number"
+                    min="0"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
+                    value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
+                    onChange={handleNumberChange}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <Label htmlFor="edit-image" className="flex items-center justify-between">
+                    Image URL
+                    {formErrors.image && (
+                      <span className="text-red-400 text-xs">{formErrors.image}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-image"
+                    name="image"
+                    placeholder="Enter image URL"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
+                    value={formData.image}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                {formData.registrationFee > 0 && (
+                  <div className="col-span-2">
+                    <Label htmlFor="edit-qrCode" className="flex items-center justify-between">
+                      Payment QR Code URL
+                      {formErrors.qrCode && (
+                        <span className="text-red-400 text-xs">{formErrors.qrCode}</span>
+                      )}
+                    </Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Input
+                        id="edit-qrCode"
+                        name="qrCode"
+                        placeholder="Enter payment QR code URL"
+                        className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
+                        value={formData.qrCode}
+                        onChange={handleInputChange}
                       />
+                      {formData.qrCode && (
+                        <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
+                          <img 
+                            src={formData.qrCode} 
+                            alt="Payment QR Code Preview" 
+                            className="max-h-24 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
+                            }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
+                  </div>
+                )}
+                
+                {formData.registrationFee > 0 && (
+                  <div className="col-span-2">
+                    <Label htmlFor="edit-upiId" className="flex items-center justify-between">
+                      UPI ID
+                      {formErrors.upiId && (
+                        <span className="text-red-400 text-xs">{formErrors.upiId}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="edit-upiId"
+                      name="upiId"
+                      placeholder="Enter UPI ID (e.g., username@bankname)"
+                      className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
+                      value={formData.upiId}
+                      onChange={handleInputChange}
+                    />
+                    <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
+                  </div>
+                )}
+                
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="edit-isTeamEvent"
+                    name="isTeamEvent"
+                    checked={formData.isTeamEvent}
+                    onChange={handleCheckboxChange}
+                    className="rounded text-amber-600 bg-gray-700 border-gray-500"
+                  />
+                  <Label htmlFor="edit-isTeamEvent">Team Event</Label>
+                </div>
+                
+                {formData.isTeamEvent && (
+                  <div>
+                    <Label htmlFor="edit-maxTeamSize" className="flex items-center justify-between">
+                      Max Team Size
+                      {formErrors.maxTeamSize && (
+                        <span className="text-red-400 text-xs">{formErrors.maxTeamSize}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="edit-maxTeamSize"
+                      name="teamSize.max"
+                      type="number"
+                      min="2"
+                      max="10"
+                      className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.maxTeamSize ? 'border-red-400' : ''}`}
+                      value={isNaN(formData.teamSize.max) ? '' : formData.teamSize.max}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        const parsedValue = value === '' ? 1 : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          teamSize: {
+                            ...prev.teamSize,
+                            max: isNaN(parsedValue) ? 1 : parsedValue
+                          }
+                        }));
+                      }}
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="edit-capacity" className="flex items-center justify-between">
+                    Capacity
+                    {formErrors.capacity && (
+                      <span className="text-red-400 text-xs">{formErrors.capacity}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="edit-capacity"
+                    name="capacity"
+                    type="number"
+                    min="1"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.capacity ? 'border-red-400' : ''}`}
+                    value={isNaN(formData.capacity) ? '' : formData.capacity}
+                    onChange={handleNumberChange}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="about">
+              <div>
+                <Label htmlFor="edit-aboutContent" className="text-lg font-semibold mb-2 block">
+                  About Content
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Provide detailed information about the event, its purpose, and what participants can expect.
+                </p>
+                <Textarea
+                  id="edit-aboutContent"
+                  name="aboutContent"
+                  placeholder="Enter detailed about information for the event"
+                  className="bg-gray-700 border-gray-600 min-h-[250px] w-full"
+                  value={formData.aboutContent}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="details">
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                  <Label htmlFor="edit-startTime">Start Time</Label>
+                  <Input
+                    id="edit-startTime"
+                    name="startTime"
+                    type="time"
+                    className="bg-gray-700 border-gray-600 mt-1"
+                    value={formData.startTime}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-endTime">End Time</Label>
+                  <Input
+                    id="edit-endTime"
+                    name="endTime"
+                    type="time"
+                    className="bg-gray-700 border-gray-600 mt-1"
+                    value={formData.endTime}
+                    onChange={handleInputChange}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-detailsContent" className="text-lg font-semibold mb-2 block">
+                  Additional Details
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Provide any additional information specific to this event, such as format, schedule, or requirements.
+                </p>
+                <Textarea
+                  id="edit-detailsContent"
+                  name="detailsContent"
+                  placeholder="Enter additional details for the event"
+                  className="bg-gray-700 border-gray-600 min-h-[200px] w-full"
+                  value={formData.detailsContent}
+                  onChange={handleInputChange}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="rules">
+              <div>
+                <Label className="text-lg font-semibold mb-2 block">
+                  Event Rules
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Add rules for your event. Click the "Add Rule" button to add a new rule.
+                </p>
+                
+                <div className="space-y-3 max-h-[400px] overflow-y-auto p-2">
+                  {formData.rules.map((rule, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input
+                        value={rule}
+                        onChange={(e) => {
+                          const newRules = [...formData.rules];
+                          newRules[index] = e.target.value;
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: newRules
+                          }));
+                        }}
+                        className="bg-gray-700 border-gray-600 flex-grow"
+                        placeholder={`Rule ${index + 1}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="border-gray-600"
+                        onClick={() => {
+                          const newRules = formData.rules.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            rules: newRules
+                          }));
+                        }}
+                      >
+                        <Trash2 size={16} className="text-red-400" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  {formData.rules.length === 0 && (
+                    <div className="text-center py-4 text-gray-500">
+                      No rules added yet
                     </div>
                   )}
                 </div>
-                <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
-              </div>
-            )}
-            
-            {formData.registrationFee > 0 && (
-              <div className="col-span-2">
-                <Label htmlFor="edit-upiId" className="flex items-center justify-between">
-                  UPI ID
-                  {formErrors.upiId && (
-                    <span className="text-red-400 text-xs">{formErrors.upiId}</span>
-                  )}
-                </Label>
-                <Input
-                  id="edit-upiId"
-                  name="upiId"
-                  placeholder="Enter UPI ID (e.g., username@bankname)"
-                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
-                  value={formData.upiId}
-                  onChange={handleInputChange}
-                />
-                <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
-              </div>
-            )}
-            
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="edit-isTeamEvent"
-                name="isTeamEvent"
-                checked={formData.isTeamEvent}
-                onChange={handleCheckboxChange}
-                className="rounded text-amber-600 bg-gray-700 border-gray-500"
-              />
-              <Label htmlFor="edit-isTeamEvent">Team Event</Label>
-            </div>
-            
-            {formData.isTeamEvent && (
-              <div>
-                <Label htmlFor="edit-maxTeamSize" className="flex items-center justify-between">
-                  Max Team Size
-                  {formErrors.maxTeamSize && (
-                    <span className="text-red-400 text-xs">{formErrors.maxTeamSize}</span>
-                  )}
-                </Label>
-                <Input
-                  id="edit-maxTeamSize"
-                  name="teamSize.max"
-                  type="number"
-                  min="2"
-                  max="10"
-                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.maxTeamSize ? 'border-red-400' : ''}`}
-                  value={isNaN(formData.teamSize.max) ? '' : formData.teamSize.max}
-                  onChange={(e) => {
-                    const { value } = e.target;
-                    const parsedValue = value === '' ? 1 : parseInt(value, 10);
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                  onClick={() => {
                     setFormData(prev => ({
                       ...prev,
-                      teamSize: {
-                        ...prev.teamSize,
-                        max: isNaN(parsedValue) ? 1 : parsedValue
-                      }
+                      rules: [...prev.rules, '']
                     }));
                   }}
-                />
+                >
+                  <Plus size={16} className="mr-2" /> Add Rule
+                </Button>
               </div>
-            )}
+            </TabsContent>
             
-            <div>
-              <Label htmlFor="edit-capacity" className="flex items-center justify-between">
-                Capacity
-                {formErrors.capacity && (
-                  <span className="text-red-400 text-xs">{formErrors.capacity}</span>
-                )}
-              </Label>
-              <Input
-                id="edit-capacity"
-                name="capacity"
-                type="number"
-                min="1"
-                className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.capacity ? 'border-red-400' : ''}`}
-                value={isNaN(formData.capacity) ? '' : formData.capacity}
-                onChange={handleNumberChange}
-              />
-            </div>
-          </div>
+            <TabsContent value="contact">
+              <div>
+                <Label className="text-lg font-semibold mb-2 block">
+                  Event Coordinators
+                </Label>
+                <p className="text-gray-400 text-sm mb-4">
+                  Add contact persons for this event. Click the "Add Coordinator" button to add a new contact.
+                </p>
+                
+                <div className="space-y-4 max-h-[400px] overflow-y-auto p-2">
+                  {formData.coordinators && formData.coordinators.map((coordinator, index) => (
+                    <div key={index} className="p-4 bg-gray-700/50 rounded-md relative">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="absolute top-2 right-2 border-gray-600 h-7 w-7"
+                        onClick={() => {
+                          const newCoordinators = formData.coordinators.filter((_, i) => i !== index);
+                          setFormData(prev => ({
+                            ...prev,
+                            coordinators: newCoordinators
+                          }));
+                        }}
+                      >
+                        <Trash2 size={14} className="text-red-400" />
+                      </Button>
+                      
+                      <div className="grid grid-cols-2 gap-3 mt-2">
+                        <div>
+                          <Label htmlFor={`edit-coordinator-${index}-name`}>Name</Label>
+                          <Input
+                            id={`edit-coordinator-${index}-name`}
+                            value={coordinator.name}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                name: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter name"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`edit-coordinator-${index}-contact`}>Contact Number</Label>
+                          <Input
+                            id={`edit-coordinator-${index}-contact`}
+                            value={coordinator.contact}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                contact: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter contact number"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor={`edit-coordinator-${index}-email`}>Email (Optional)</Label>
+                          <Input
+                            id={`edit-coordinator-${index}-email`}
+                            value={coordinator.email || ''}
+                            onChange={(e) => {
+                              const newCoordinators = [...formData.coordinators];
+                              newCoordinators[index] = {
+                                ...newCoordinators[index],
+                                email: e.target.value
+                              };
+                              setFormData(prev => ({
+                                ...prev,
+                                coordinators: newCoordinators
+                              }));
+                            }}
+                            className="bg-gray-700 border-gray-600 mt-1"
+                            placeholder="Enter email"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {(!formData.coordinators || formData.coordinators.length === 0) && (
+                    <div className="text-center py-4 text-gray-500">
+                      No coordinators added yet
+                    </div>
+                  )}
+                </div>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 border-amber-500 text-amber-500 hover:bg-amber-500/10"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      coordinators: [...(prev.coordinators || []), { name: '', contact: '', email: '' }]
+                    }));
+                  }}
+                >
+                  <Plus size={16} className="mr-2" /> Add Coordinator
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
           
           <DialogFooter>
             <Button 
