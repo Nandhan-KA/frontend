@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { api } from '../services/api';
 import { 
   LayoutDashboard, 
   CalendarDays, 
@@ -53,11 +53,6 @@ interface Registration {
   paymentStatus: string;
   createdAt: string;
 }
-
-// Create an axios instance with base URL
-const api = axios.create({
-  baseURL: 'http://localhost:5000'
-});
 
 // Add request interceptor to include auth token
 api.interceptors.request.use(

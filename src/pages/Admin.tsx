@@ -1,5 +1,6 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { publicApi } from '../services/api';
 
 const Admin = () => {
   const [email, setEmail] = useState('');
@@ -14,19 +15,12 @@ const Admin = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await publicApi.post('/api/admin/login', {
+        email, 
+        password
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to login');
-      }
+      const data = response.data;
 
       // Save the token and user info to localStorage
       localStorage.setItem('adminToken', data.token);
@@ -40,7 +34,7 @@ const Admin = () => {
       // Redirect to dashboard
       navigate('/admin/dashboard');
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.response?.data?.message || err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }

@@ -58,6 +58,7 @@ interface Event {
   registrationFee: number;
   image: string;
   qrCode?: string;
+  upiId?: string;
   isTeamEvent: boolean;
   teamSize: {
     min: number;
@@ -76,6 +77,7 @@ interface FormErrors {
   location?: string;
   image?: string;
   qrCode?: string;
+  upiId?: string;
   maxTeamSize?: string;
   price?: string;
   capacity?: string;
@@ -100,6 +102,7 @@ const AdminEvents = () => {
     registrationFee: 0,
     image: '',
     qrCode: '',
+    upiId: '',
     isTeamEvent: false,
     capacity: 50,
     teamSize: {
@@ -151,6 +154,7 @@ const AdminEvents = () => {
         registrationFee: event.registrationFee || 0,
         image: event.image,
         qrCode: event.qrCode || '',
+        upiId: event.upiId || '',
         isTeamEvent: event.isTeamEvent || false,
         teamSize: event.teamSize || { min: 1, max: 1 },
         capacity: event.capacity || 50,
@@ -226,6 +230,7 @@ const AdminEvents = () => {
       registrationFee: 0,
       image: '',
       qrCode: '',
+      upiId: '',
       isTeamEvent: false,
       capacity: 50,
       teamSize: {
@@ -292,6 +297,10 @@ const AdminEvents = () => {
       errors.qrCode = "Please enter a valid URL for QR code";
     }
     
+    if (formData.registrationFee > 0 && !formData.upiId?.trim()) {
+      errors.upiId = "UPI ID is required for paid events";
+    }
+    
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -321,6 +330,7 @@ const AdminEvents = () => {
       registrationFee: event.registrationFee || 0,
       image: event.image || '',
       qrCode: event.qrCode || '',
+      upiId: event.upiId || '',
       isTeamEvent: event.isTeamEvent || false,
       capacity: event.capacity || 50,
       teamSize: {
@@ -353,6 +363,7 @@ const AdminEvents = () => {
         description: formData.description,
         image: formData.image,
         qrCode: formData.qrCode,
+        upiId: formData.upiId,
         eventType: formData.eventType,
         capacity: isNaN(formData.capacity) ? 50 : formData.capacity,
         registrationFee: isNaN(formData.registrationFee) ? 0 : formData.registrationFee,
@@ -401,6 +412,7 @@ const AdminEvents = () => {
         description: formData.description,
         image: formData.image,
         qrCode: formData.qrCode,
+        upiId: formData.upiId,
         eventType: formData.eventType,
         capacity: isNaN(formData.capacity) ? 50 : formData.capacity,
         registrationFee: isNaN(formData.registrationFee) ? 0 : formData.registrationFee,
@@ -685,7 +697,7 @@ const AdminEvents = () => {
       
       {/* Create Event Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl">
+        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create New Event</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -851,6 +863,26 @@ const AdminEvents = () => {
               </div>
             )}
             
+            {formData.registrationFee > 0 && (
+              <div className="col-span-2">
+                <Label htmlFor="upiId" className="flex items-center justify-between">
+                  UPI ID
+                  {formErrors.upiId && (
+                    <span className="text-red-400 text-xs">{formErrors.upiId}</span>
+                  )}
+                </Label>
+                <Input
+                  id="upiId"
+                  name="upiId"
+                  placeholder="Enter UPI ID (e.g., username@bankname)"
+                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
+                  value={formData.upiId}
+                  onChange={handleInputChange}
+                />
+                <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
+              </div>
+            )}
+            
             <div className="flex items-center space-x-2">
               <input
                 type="checkbox"
@@ -942,7 +974,7 @@ const AdminEvents = () => {
       
       {/* Edit Event Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl">
+        <DialogContent className="bg-gray-800 text-white border-gray-700 max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -1105,6 +1137,26 @@ const AdminEvents = () => {
                   )}
                 </div>
                 <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
+              </div>
+            )}
+            
+            {formData.registrationFee > 0 && (
+              <div className="col-span-2">
+                <Label htmlFor="edit-upiId" className="flex items-center justify-between">
+                  UPI ID
+                  {formErrors.upiId && (
+                    <span className="text-red-400 text-xs">{formErrors.upiId}</span>
+                  )}
+                </Label>
+                <Input
+                  id="edit-upiId"
+                  name="upiId"
+                  placeholder="Enter UPI ID (e.g., username@bankname)"
+                  className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
+                  value={formData.upiId}
+                  onChange={handleInputChange}
+                />
+                <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
               </div>
             )}
             

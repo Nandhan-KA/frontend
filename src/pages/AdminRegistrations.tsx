@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminApi } from '../services/api';
+import { adminApi, publicApi } from '../services/api';
 import { Loader2, CheckCircle, XCircle, Filter, Search, Download, RefreshCw, Eye, Edit, Trash, AlertTriangle } from 'lucide-react';
 
 import AdminHeader from '../components/admin/AdminHeader';
@@ -784,7 +784,7 @@ const AdminRegistrations = () => {
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-1">Payment Proof</h3>
                     <a 
-                      href={`http://localhost:5000/${selectedRegistration.paymentProof}`}
+                      href={`${import.meta.env.VITE_API_URL}/${selectedRegistration.paymentProof}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 hover:text-blue-800 underline flex items-center"

@@ -35,6 +35,8 @@ interface Event {
   capacity: number;
   isActive: boolean;
   date?: string;
+  qrCode?: string;
+  upiId?: string;
 }
 
 // Define schema for team member
@@ -718,7 +720,7 @@ const EventRegistration = () => {
                           
                           <div className="text-center mb-4">
                             <p className="text-gray-300 mb-1">Scan the QR code or use the following details:</p>
-                            <p className="font-medium text-gold text-lg animate-text-glow">UPI: {siteSettings.upiId}</p>
+                            <p className="font-medium text-gold text-lg animate-text-glow">UPI: {event.upiId || siteSettings.upiId}</p>
                             <p className="text-sm text-gray-400 mt-2">Please mention your name and event in payment description</p>
                           </div>
                         </div>
