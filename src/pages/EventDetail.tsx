@@ -127,32 +127,32 @@ const EventDetail = () => {
       <Navbar />
       
       {/* Hero Section with Parallax Effect */}
-      <div className="relative h-[55vh] overflow-hidden">
+      <div className="relative h-[35vh] md:h-[40vh] overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center transform transition-transform duration-1000 hover:scale-105 shadow-inner"
           style={{ 
             backgroundImage: `url(${event.image || 'https://images.unsplash.com/photo-1485163819542-13adeb5e0068?auto=format&fit=crop&w=800&q=80'})`,
             backgroundPosition: 'center',
             backgroundSize: 'cover',
-            filter: 'brightness(0.85) contrast(1.1)'
+            filter: 'brightness(0.8) contrast(1.1)'
           }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#0e0e10] via-[#0e0e10]/80 to-transparent"></div>
         
         {/* Animated overlay elements */}
-        <div className="absolute inset-0 overflow-hidden opacity-30 pointer-events-none">
-          <div className="absolute top-[10%] right-[20%] w-64 h-64 rounded-full bg-purple-500/10 blur-3xl animate-float-slow"></div>
-          <div className="absolute bottom-[20%] left-[10%] w-80 h-80 rounded-full bg-gold/10 blur-3xl animate-float-staggered-1"></div>
+        <div className="absolute inset-0 overflow-hidden opacity-20 pointer-events-none">
+          <div className="absolute top-[10%] right-[20%] w-48 h-48 rounded-full bg-purple-500/10 blur-3xl animate-float-slow"></div>
+          <div className="absolute bottom-[20%] left-[10%] w-64 h-64 rounded-full bg-gold/10 blur-3xl animate-float-staggered-1"></div>
         </div>
         
-        <div className="absolute bottom-0 left-0 w-full p-6 md:p-10 container mx-auto">
+        <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 container mx-auto">
           <Link 
             to="/#events" 
-            className="inline-flex items-center text-white/70 hover:text-white mb-4 transition-colors hover:translate-x-[-4px] duration-300"
+            className="inline-flex items-center text-white/70 hover:text-white mb-3 transition-colors hover:translate-x-[-4px] duration-300"
           >
             <ChevronLeft className="mr-1" size={16} /> Back to Events
           </Link>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4 animate-fade-in-up bg-gradient-to-r from-white to-gold bg-clip-text text-transparent drop-shadow-sm">{event.title}</h1>
+          <h1 className="text-2xl md:text-4xl font-bold mb-3 animate-fade-in-up bg-gradient-to-r from-white to-gold bg-clip-text text-transparent drop-shadow-sm">{event.title}</h1>
           <div className="flex flex-wrap gap-3 animate-fade-in" style={{ animationDelay: '0.2s' }}>
             <span className="text-sm font-medium bg-gold/20 text-gold px-3 py-1 rounded-full flex items-center">
               {event.eventType === 'competition' ? <Trophy size={14} className="mr-1.5" /> : 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Mail, Phone, MapPin, Send } from 'lucide-react';
+import { Mail, Phone, MapPin } from 'lucide-react';
+
 const Contact = () => {
   return <section id="contact" className="section bg-[#121215] text-white">
       <div className="container mx-auto">
@@ -14,39 +15,6 @@ const Contact = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div>
-            <div className="bg-black/50 backdrop-blur-md rounded-xl p-8">
-              <h3 className="text-2xl font-bold mb-6">Send us a message</h3>
-              
-              <form className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-2">Full Name</label>
-                    <input type="text" id="name" className="w-full bg-white/10 border border-white/20 rounded-lg p-3 focus:outline-none focus:border-gold" placeholder="Enter your name" />
-                  </div>
-                  <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-2">Email Address</label>
-                    <input type="email" id="email" className="w-full bg-white/10 border border-white/20 rounded-lg p-3 focus:outline-none focus:border-gold" placeholder="Enter your email" />
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="subject" className="block text-sm font-medium mb-2">Subject</label>
-                  <input type="text" id="subject" className="w-full bg-white/10 border border-white/20 rounded-lg p-3 focus:outline-none focus:border-gold" placeholder="Enter subject" />
-                </div>
-                
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-2">Message</label>
-                  <textarea id="message" rows={4} className="w-full bg-white/10 border border-white/20 rounded-lg p-3 focus:outline-none focus:border-gold" placeholder="Enter your message"></textarea>
-                </div>
-                
-                <button type="submit" className="btn-gold rounded-full px-6 py-3 font-bold flex items-center gap-2">
-                  Send Message <Send size={18} />
-                </button>
-              </form>
-            </div>
-          </div>
-          
-          <div>
             <div className="bg-black/50 backdrop-blur-md rounded-xl p-8 h-full">
               <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
               
@@ -57,8 +25,7 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-lg">Email</h4>
-                    <p className="text-gray-300">info@techshethra.com</p>
-                    <p className="text-gray-300">support@techshethra.com</p>
+                    <p className="text-gray-300">techshethra2k25@gmail.com</p>
                   </div>
                 </div>
                 
@@ -68,8 +35,8 @@ const Contact = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-lg">Phone</h4>
-                    <p className="text-gray-300">+1 (555) 123-4567</p>
-                    <p className="text-gray-300">+1 (555) 987-6543</p>
+                    <p className="text-gray-300">+91 80000 28032</p>
+                    <p className="text-gray-300">+91 99529 85607</p>
                   </div>
                 </div>
                 
@@ -80,9 +47,9 @@ const Contact = () => {
                   <div>
                     <h4 className="font-bold text-lg">Location</h4>
                     <p className="text-gray-300">
-                      Tech Innovation Center<br />
-                      123 Innovation Drive<br />
-                      San Francisco, CA 94103
+                      MEENAKSHI COLLEGE OF ENGINEERING<br />
+                      #12, Vembuliamman Kovil Street<br />
+                      West K.K.Nagar, Chennai-600078
                     </p>
                   </div>
                 </div>
@@ -115,8 +82,26 @@ const Contact = () => {
               </div>
             </div>
           </div>
+          
+          <div className="h-full">
+            <div className="bg-black/50 backdrop-blur-md rounded-xl p-8 h-full">
+              <h3 className="text-2xl font-bold mb-6">Find Us</h3>
+              <div className="w-full h-[400px] rounded-lg overflow-hidden">
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3887.2893307874016!2d80.18307647495574!3d13.019583887325094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ba8f5c844c195bb%3A0xe14d83a71da3a0f9!2sMeenakshi%20College%20of%20Engineering!5e0!3m2!1sen!2sin!4v1718094073895!5m2!1sen!2sin" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>;
 };
+
 export default Contact;

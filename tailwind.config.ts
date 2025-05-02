@@ -168,6 +168,22 @@ export default {
 					'0%': { opacity: '0', transform: 'translateX(20px)' },
 					'100%': { opacity: '1', transform: 'translateX(0)' }
 				},
+				'blink': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0' }
+				},
+				'gradient-slow': {
+					'0%': { backgroundPosition: '0% 50%', opacity: '0.5' },
+					'50%': { backgroundPosition: '100% 50%', opacity: '0.8' },
+					'100%': { backgroundPosition: '0% 50%', opacity: '0.5' }
+				},
+				'float-orbit': {
+					'0%': { transform: 'rotate(0deg) translateX(20px)' },
+					'100%': { transform: 'rotate(360deg) translateX(20px)' }
+				},
+				'ping': {
+					'75%, 100%': { transform: 'scale(1.5)', opacity: '0' }
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -198,6 +214,10 @@ export default {
 				'reveal-down': 'reveal-down 0.8s ease-out forwards',
 				'fade-in-left': 'fade-in-left 0.8s ease-out forwards',
 				'fade-in-right': 'fade-in-right 0.8s ease-out forwards',
+				'blink': 'blink 1s ease-in-out infinite',
+				'gradient-slow': 'gradient-slow 15s ease infinite',
+				'float-orbit': 'float-orbit 12s linear infinite',
+				'ping': 'ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite',
 			},
 			backgroundImage: {
 				'hero-pattern': "url('/hero-bg.jpg')",
@@ -205,6 +225,7 @@ export default {
 				'gradient-dark': 'linear-gradient(to bottom, #0e0e10, #121215)',
 				'gradient-gold': 'linear-gradient(to right, hsl(var(--gold)), hsl(var(--amber-500)))',
 				'gradient-glow': 'radial-gradient(circle at center, hsl(var(--gold))/30%, transparent 70%)',
+				'grid-pattern': 'linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px)',
 			},
 			backdropBlur: {
 				xs: '2px',

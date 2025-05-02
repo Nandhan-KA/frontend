@@ -70,8 +70,8 @@ const About = () => {
               <div className="absolute -bottom-8 -right-8 bg-black/80 backdrop-blur-md p-4 rounded-2xl shadow-xl shadow-black/30 overflow-hidden group">
                 <div className="relative z-10 flex items-center">
                   <div>
-                    <div className="text-gold font-bold text-4xl">8+</div>
-                    <div className="text-sm text-gray-300">Years of Excellence</div>
+                    <div className="text-gold font-bold text-4xl">1st</div>
+                    <div className="text-sm text-gray-300">National Symposium</div>
                   </div>
                 </div>
                 <div className="absolute inset-0 bg-gold/10 rounded-full blur-3xl group-hover:blur-2xl transition-all duration-700 -translate-x-1/2 group-hover:translate-x-0 opacity-30 group-hover:opacity-40"></div>
@@ -86,11 +86,15 @@ const About = () => {
           </FadeInLeft>
 
           <FadeInRight>
-            <h3 className="text-2xl md:text-3xl font-bold mb-6">Igniting Innovation Since 2017</h3>
+            <h3 className="text-2xl md:text-3xl font-bold mb-6">The First Chapter</h3>
+            <p className="text-gray-300 mb-4">
+              Techshethra is the very first national-level symposium organized by the students of the Department of Information Technology at Meenakshi College of Engineering, Chennai. It all began with a simple idea — to create something exciting, meaningful, and memorable. What started as a student-led initiative has grown into a vibrant celebration of creativity, curiosity, and community.
+            </p>
+            <p className="text-gray-300 mb-4">
+              This event brings together students from all walks of life, offering something for everyone — whether you're here to challenge yourself, connect with others, or just enjoy the experience. Every part of Techshethra reflects the energy, passion, and teamwork of young minds coming together to build something special.
+            </p>
             <p className="text-gray-300 mb-8">
-              TechShethra has been at the forefront of technological discourse for over 8 years, 
-              providing a platform for breakthrough ideas and transformative innovations. What started 
-              as a small college event has grown into one of the region's most anticipated tech symposiums.
+              We're thrilled to welcome you to the first chapter of Techshethra. Join us, be part of the vibe, and let's make it an experience to remember.
             </p>
 
             <StaggerContainer className="grid grid-cols-1 sm:grid-cols-2 gap-6">
