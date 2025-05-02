@@ -284,17 +284,11 @@ const EventDetail = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold mb-2 text-gray-100">Date & Time</h3>
-                          <p className="text-gray-100 text-sm mb-1">
+                          <p className="text-gray-100 text-sm">
                             {event.date ? new Date(event.date).toLocaleDateString(undefined, 
-                              { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
+                              { year: 'numeric', month: 'long', day: 'numeric' }
                             ) : 'Date TBA'}
                           </p>
-                          {event.startTime && event.endTime && (
-                            <p className="text-gray-100 text-sm flex items-center">
-                              <Clock className="text-gold/70 mr-1" size={14} />
-                              {event.startTime} - {event.endTime}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>

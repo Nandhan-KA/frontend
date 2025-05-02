@@ -136,6 +136,14 @@ const EventRegistration = () => {
       try {
         setLoading(true);
         const response = await publicApi.get(`/api/events/${eventId}`);
+        console.log("Event data:", response.data);
+        
+        // If location is missing, set a default
+        if (!response.data.location) {
+          console.warn("Location missing in event data, using default");
+          response.data.location = "Meenakshi College of Engineering, Chennai";
+        }
+        
         setEvent(response.data);
         
         // Just check login status without auto-filling
@@ -400,13 +408,11 @@ const EventRegistration = () => {
               <h1 className="text-3xl font-orbitron font-bold mb-2 text-gold animate-text-glow">{event.title}</h1>
               
               <div className="text-gray-300 space-y-1 mb-4">
-                {event.date && (
-                  <div>
-                    <span className="font-medium">Date:</span> {new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
-                  </div>
-                )}
                 <div>
-                  <span className="font-medium">Location:</span> {event.location}
+                  <span className="font-medium">Date:</span> {event.date ? new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA'}
+                </div>
+                <div>
+                  <span className="font-medium">Location:</span> {event.location || 'Meenakshi College of Engineering, Chennai'}
                 </div>
                 <div>
                   <span className="font-medium">Registration Fee:</span> {event.registrationFee === 0 ? 'Free' : `₹${event.registrationFee}`}
@@ -707,7 +713,7 @@ const EventRegistration = () => {
                           <div className="flex justify-center mb-4">
                             <div className="bg-white p-6 rounded-lg max-w-[220px] shadow-[0_0_20px_rgba(255,215,0,0.2)] animate-pulse-slow">
                               <img 
-                                src={siteSettings.paymentQrCode || "/payment-qr.png"} 
+                                src={event.qrCode || siteSettings.paymentQrCode || "/payment-qr.png"} 
                                 alt="Payment QR Code" 
                                 className="w-full h-auto rounded-md"
                                 onError={(e) => {
