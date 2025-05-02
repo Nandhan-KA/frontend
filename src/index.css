@@ -100,6 +100,14 @@
   }
 }
 
+/* Fix for admin registration tab - ensure proper visibility */
+[href="/admin/registrations"] {
+  color: inherit !important;
+  background-color: transparent !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
 .countdown-item {
   @apply bg-black/50 backdrop-blur-md rounded-lg p-3 md:p-4 text-center min-w-[70px] md:min-w-[80px];
 }

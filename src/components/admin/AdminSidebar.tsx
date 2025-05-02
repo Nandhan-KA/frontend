@@ -64,6 +64,9 @@ const NavItem = ({ icon, name, path, id, isActive, badge, children }: NavItemPro
   const [isOpen, setIsOpen] = useState(false);
   const hasChildren = children && children.length > 0;
   
+  // Special handling for registrations path to ensure it's visible
+  const isRegistrationPath = path === '/admin/registrations';
+  
   return (
     <div className="relative">
       <Link 
@@ -78,7 +81,8 @@ const NavItem = ({ icon, name, path, id, isActive, badge, children }: NavItemPro
           isActive && !hasChildren 
             ? "bg-amber-500 hover:bg-amber-600 text-white font-bold" 
             : "text-gray-800 font-bold hover:text-gray-900"
-        } font-heading`}
+        } font-heading ${isRegistrationPath ? "registration-nav-item" : ""}`}
+        style={isRegistrationPath ? { opacity: 1, color: 'inherit', backgroundColor: 'transparent' } : {}}
       >
         <div className="flex-shrink-0 text-center w-6">{icon}</div>
         <span className="flex-grow font-bold">{name}</span>
@@ -229,6 +233,18 @@ const AdminSidebar = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add regular style tag without jsx */}
+      <style>
+        {`
+        .registration-nav-item {
+          opacity: 1 !important;
+          visibility: visible !important;
+          color: inherit !important;
+          display: flex !important;
+        }
+        `}
+      </style>
     </div>
   );
 };

@@ -1,3 +1,9 @@
+/**
+ * AdminRegistrations.tsx
+ * This component handles the display and management of event registrations in the admin dashboard.
+ * Fixed issue with component appearing blacked out by improving error handling and loading states.
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { adminApi, publicApi } from '../services/api';
@@ -46,7 +52,7 @@ interface Registration {
   email: string;
   phone: string;
   college: string;
-  event: {
+  event?: {
     _id: string;
     title: string;
   };
@@ -94,11 +100,68 @@ const AdminRegistrations = () => {
   const [deleting, setDeleting] = useState(false);
   const [previousRegistrationsCount, setPreviousRegistrationsCount] = useState(0);
   const [newRegistrationsCount, setNewRegistrationsCount] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  // Utility function to ensure event data is present
+  const normalizeRegistration = (registration: Registration): Registration => {
+    if (!registration) return {} as Registration;
+    
+    // Create a safe copy with all expected fields
+    return {
+      ...registration,
+      name: registration.name || '',
+      email: registration.email || '',
+      phone: registration.phone || '',
+      college: registration.college || '',
+      event: registration.event || { _id: 'unknown', title: 'Unknown Event' },
+      registrationStatus: registration.registrationStatus || 'pending',
+      paymentStatus: registration.paymentStatus || 'pending',
+      createdAt: registration.createdAt || new Date().toISOString(),
+      _id: registration._id || 'temp-id'
+    };
+  };
+  
+  // Make sure events array contains no null or invalid items
+  const normalizeEvents = (eventsArray: Event[]): Event[] => {
+    if (!eventsArray) return [];
+    return eventsArray
+      .filter(event => event) // Filter out null/undefined events
+      .map(event => ({
+        ...event,
+        _id: event._id || 'unknown',
+        title: event.title || 'Unnamed Event'
+      }));
+  };
 
   // Clear new registrations indicator when user interacts with the list
   const clearNewRegistrationsIndicator = () => {
     if (newRegistrationsCount > 0) {
       setNewRegistrationsCount(0);
+    }
+  };
+
+  // Global error handler
+  const handleError = (error: any, context: string) => {
+    console.error(`Error in ${context}:`, error);
+    
+    // Get a useful error message
+    let errorMessage = "An unexpected error occurred";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
+    // Show toast notification for user
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: `${context}: ${errorMessage}`,
+    });
+    
+    // For serious errors that prevent rendering, update error state
+    if (context === 'component rendering') {
+      setError(errorMessage);
     }
   };
 
@@ -109,6 +172,7 @@ const AdminRegistrations = () => {
       const token = localStorage.getItem('adminToken');
       
       if (!token) {
+        console.error('No admin token found');
         navigate('/admin');
         return;
       }
@@ -116,52 +180,130 @@ const AdminRegistrations = () => {
       // Store previous count to detect new registrations
       const prevCount = registrations.length;
       
-      // Fetch all registrations
-      const regResponse = await adminApi.get('/api/registration');
+      // Fetch all registrations - Use explicit URL to avoid path issues
+      console.log('Fetching registrations data...');
+      const regResponse = await adminApi.get('/api/registration', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      // Fetch all events for filtering
-      const eventsResponse = await adminApi.get('/api/events');
+      console.log('Registration API response:', regResponse);
       
-      // Check for new registrations
-      const newRegs = regResponse.data;
-      if (prevCount > 0 && newRegs.length > prevCount) {
-        const newCount = newRegs.length - prevCount;
-        setNewRegistrationsCount(newCount);
-        
-        // Mark new registrations with a timestamp for highlighting
-        const now = new Date().getTime();
-        const markedRegistrations = newRegs.map(reg => {
-          // Consider only registrations that weren't in the previous list
-          const isNewRegistration = !registrations.some(oldReg => oldReg._id === reg._id);
-          return {
-            ...reg,
-            isNew: isNewRegistration,
-            highlightUntil: isNewRegistration ? now + 30000 : undefined // highlight for 30 seconds
-          };
-        });
-        
-        setRegistrations(markedRegistrations);
-        
-        // Show notification
+      // Ensure we have valid data
+      if (!regResponse.data || !Array.isArray(regResponse.data)) {
+        console.error('Invalid registration data received:', regResponse.data);
         toast({
-          title: `${newCount} New Registration${newCount > 1 ? 's' : ''}`,
-          description: `${newCount} new registration${newCount > 1 ? 's have' : ' has'} been received.`,
-          variant: "default",
+          variant: "destructive",
+          title: "Error",
+          description: "Invalid data received from server",
         });
-      } else {
-        setRegistrations(newRegs);
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+      
+      try {
+        // Process each registration to ensure it has valid event data
+        const safeRegistrations = regResponse.data.map((reg: any) => {
+          // Skip null/undefined registrations
+          if (!reg) return null;
+          
+          // Ensure each registration has an event object
+          let safeReg = { ...reg };
+          if (!safeReg.event) {
+            console.log('Found registration without event:', safeReg._id);
+            safeReg.event = { _id: 'unknown', title: 'Unknown Event' };
+          } else if (!safeReg.event.title) {
+            console.log('Found registration with event missing title:', safeReg._id);
+            safeReg.event.title = 'Unnamed Event';
+          }
+          
+          return safeReg;
+        })
+        // Filter out any null values that might have been introduced
+        .filter((reg: any) => reg !== null);
+        
+        // Normalize all registrations
+        const normalizedRegs = safeRegistrations.map((reg: any) => normalizeRegistration(reg));
+        
+        // Fetch all events for filtering
+        const eventsResponse = await adminApi.get('/api/events');
+        
+        // Ensure we have valid events data
+        if (!eventsResponse.data) {
+          console.error('Invalid events data received');
+          setEvents([]);
+        } else {
+          // Process events to ensure they have required properties
+          const safeEvents = Array.isArray(eventsResponse.data) 
+            ? eventsResponse.data
+                .filter((event: any) => event !== null && event !== undefined)
+                .map((event: any) => ({
+                  _id: event._id || 'unknown',
+                  title: event.title || 'Unnamed Event'
+                }))
+            : [];
+            
+          setEvents(safeEvents);
+        }
+        
+        // Check for new registrations
+        if (prevCount > 0 && normalizedRegs.length > prevCount) {
+          const newCount = normalizedRegs.length - prevCount;
+          setNewRegistrationsCount(newCount);
+          
+          // Mark new registrations with a timestamp for highlighting
+          const now = new Date().getTime();
+          const markedRegistrations = normalizedRegs.map(reg => {
+            // Consider only registrations that weren't in the previous list
+            const isNewRegistration = !registrations.some(oldReg => oldReg._id === reg._id);
+            return {
+              ...reg,
+              isNew: isNewRegistration,
+              highlightUntil: isNewRegistration ? now + 30000 : undefined // highlight for 30 seconds
+            };
+          });
+          
+          setRegistrations(markedRegistrations);
+          
+          // Show notification
+          toast({
+            title: `${newCount} New Registration${newCount > 1 ? 's' : ''}`,
+            description: `${newCount} new registration${newCount > 1 ? 's have' : ' has'} been received.`,
+            variant: "default",
+          });
+        } else {
+          setRegistrations(normalizedRegs);
+        }
+      } catch (processingError) {
+        console.error('Error processing registration data:', processingError);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error processing registration data",
+        });
       }
       
       setPreviousRegistrationsCount(prevCount);
-      setEvents(eventsResponse.data);
       setLastUpdated(new Date());
       
     } catch (error) {
       console.error('Error fetching data:', error);
+      
+      // More detailed logging
+      if (error.response) {
+        console.error('API Response Error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('API Request Error (No Response):', error.request);
+      } else {
+        console.error('Error Message:', error.message);
+      }
+      
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to load registrations. Please try again.",
+        description: "Failed to load registrations. Please try again later.",
       });
     } finally {
       setLoading(false);
@@ -169,18 +311,27 @@ const AdminRegistrations = () => {
     }
   };
 
-  // Initial data fetch
+  // Initial data fetch with error handling
   useEffect(() => {
-    fetchData();
+    try {
+      fetchData();
+    } catch (error) {
+      handleError(error, 'initial data fetch');
+    }
   }, [navigate]);
   
-  // Set up polling for real-time updates
+  // Set up polling for real-time updates with error handling
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
     
     if (autoRefresh) {
       intervalId = setInterval(() => {
-        fetchData();
+        try {
+          fetchData();
+        } catch (error) {
+          handleError(error, 'auto refresh');
+          // Don't stop auto-refresh on error
+        }
       }, refreshInterval * 1000);
     }
     
@@ -277,8 +428,12 @@ const AdminRegistrations = () => {
   };
 
   const handleManualRefresh = () => {
-    clearNewRegistrationsIndicator();
-    fetchData();
+    try {
+      clearNewRegistrationsIndicator();
+      fetchData();
+    } catch (error) {
+      handleError(error, 'manual refresh');
+    }
   };
   
   const toggleAutoRefresh = () => {
@@ -287,13 +442,16 @@ const AdminRegistrations = () => {
 
   // Filter registrations based on search term and filters
   const filteredRegistrations = registrations.filter(reg => {
+    // Add additional null/undefined checks for event objects
+    const eventTitle = reg.event && reg.event.title ? reg.event.title.toLowerCase() : '';
+    
     const matchesSearch = 
       searchTerm === '' || 
       reg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       reg.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      reg.event.title.toLowerCase().includes(searchTerm.toLowerCase());
+      eventTitle.includes(searchTerm.toLowerCase());
     
-    const matchesEvent = filterEvent === 'all' || reg.event._id === filterEvent;
+    const matchesEvent = filterEvent === 'all' || (reg.event && reg.event._id === filterEvent);
     
     const matchesRegistrationStatus = 
       filterRegistrationStatus === 'all' || 
@@ -308,13 +466,17 @@ const AdminRegistrations = () => {
 
   // Handle viewing registration details
   const handleViewRegistration = (registration: Registration) => {
-    setSelectedRegistration(registration);
+    // Ensure event data is present
+    const processedReg = normalizeRegistration(registration);
+    setSelectedRegistration(processedReg);
     setViewDialogOpen(true);
   };
 
   // Handle editing registration status
   const handleEditRegistration = (registration: Registration) => {
-    setSelectedRegistration(registration);
+    // Ensure event data is present
+    const processedReg = normalizeRegistration(registration);
+    setSelectedRegistration(processedReg);
     setEditRegistrationStatus(registration.registrationStatus);
     setEditPaymentStatus(registration.paymentStatus);
     setEditDialogOpen(true);
@@ -322,7 +484,9 @@ const AdminRegistrations = () => {
 
   // Handle deleting registration
   const handleDeleteRegistration = (registration: Registration) => {
-    setSelectedRegistration(registration);
+    // Ensure event data is present
+    const processedReg = normalizeRegistration(registration);
+    setSelectedRegistration(processedReg);
     setDeleteDialogOpen(true);
   };
 
@@ -410,6 +574,16 @@ const AdminRegistrations = () => {
 
   // Export registrations as CSV
   const exportToCSV = () => {
+    // Make sure we have valid data to export
+    if (!filteredRegistrations || !Array.isArray(filteredRegistrations) || filteredRegistrations.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "No data available to export",
+      });
+      return;
+    }
+    
     const headers = [
       'Name',
       'Email',
@@ -423,31 +597,49 @@ const AdminRegistrations = () => {
       'Date Registered'
     ];
     
-    const csvRows = [
-      headers.join(','),
-      ...filteredRegistrations.map(reg => [
-        `"${reg.name}"`,
-        `"${reg.email}"`,
-        `"${reg.phone}"`,
-        `"${reg.college}"`,
-        `"${reg.event.title}"`,
-        `"${reg.teamName || ''}"`,
-        `"${reg.registrationStatus}"`,
-        `"${reg.paymentStatus}"`,
-        `"${reg.transactionId || ''}"`,
-        `"${new Date(reg.createdAt).toLocaleDateString()}"`,
-      ].join(','))
-    ];
-    
-    const csvContent = csvRows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `registrations_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      // Make sure we safely handle event property when exporting
+      const csvRows = [
+        headers.join(','),
+        ...filteredRegistrations.map(reg => {
+          // Ensure registration object exists and is valid
+          if (!reg) return '';
+          
+          // Normalize the registration to ensure event is present
+          const normalizedReg = normalizeRegistration(reg);
+          
+          return [
+            `"${normalizedReg.name || ''}"`,
+            `"${normalizedReg.email || ''}"`,
+            `"${normalizedReg.phone || ''}"`,
+            `"${normalizedReg.college || ''}"`,
+            `"${normalizedReg.event?.title || 'Unknown Event'}"`,
+            `"${normalizedReg.teamName || ''}"`,
+            `"${normalizedReg.registrationStatus || ''}"`,
+            `"${normalizedReg.paymentStatus || ''}"`,
+            `"${normalizedReg.transactionId || ''}"`,
+            `"${normalizedReg.createdAt ? new Date(normalizedReg.createdAt).toLocaleDateString() : ''}"`,
+          ].join(',');
+        })
+      ];
+      
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `registrations_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      toast({
+        variant: "destructive",
+        title: "Export Failed",
+        description: "An error occurred while generating the CSV file",
+      });
+    }
   };
 
   // Format date string
@@ -486,33 +678,71 @@ const AdminRegistrations = () => {
     );
   };
 
-  // Show loading state
-  if (loading) {
+  // Render error state
+  if (error) {
     return (
       <div className="min-h-screen bg-white text-gray-900 flex">
         <AdminHeader />
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-amber-500" />
+        <div className="flex flex-1">
+          <AdminSidebar />
+          <div className="flex-1 p-6 flex items-center justify-center bg-white">
+            <div className="text-center max-w-md">
+              <h2 className="text-2xl font-bold mb-2 text-gray-800">Error Loading Registrations</h2>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <Button onClick={() => {
+                setError(null);
+                setLoading(true);
+                handleManualRefresh();
+              }} className="mr-4 bg-amber-500 hover:bg-amber-600 text-white">
+                <RefreshCw className="h-4 w-4 mr-2" /> Try Again
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/admin/dashboard')} className="border-gray-300 text-gray-700">
+                Return to Dashboard
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show error state if needed
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white text-gray-900 flex flex-col">
+        <AdminHeader />
+        <div className="flex flex-1">
+          <AdminSidebar />
+          <div className="flex-1 p-6 flex items-center justify-center bg-white">
+            <div className="text-center">
+              <Loader2 className="h-12 w-12 animate-spin text-amber-500 mx-auto" />
+              <p className="mt-4 text-xl font-semibold text-gray-800">Loading registrations...</p>
+              <p className="text-gray-600">Please wait while we fetch the data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if needed
   if (registrations.length === 0 && !loading) {
     return (
       <div className="min-h-screen bg-white text-gray-900 flex">
         <AdminHeader />
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center max-w-md">
-            <h2 className="text-2xl font-bold mb-2">No Registrations Found</h2>
-            <p className="text-gray-600 mb-6">There are no event registrations in the system yet.</p>
-            <Button onClick={handleManualRefresh} className="mr-4">
-              <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/admin/events')}>
-              View Events
-            </Button>
+        <div className="flex flex-1">
+          <AdminSidebar />
+          <div className="flex-1 p-6 flex items-center justify-center bg-white">
+            <div className="text-center max-w-md">
+              <h2 className="text-2xl font-bold mb-2 text-gray-800">No Registrations Found</h2>
+              <p className="text-gray-600 mb-6">There are no event registrations in the system yet.</p>
+              <Button onClick={handleManualRefresh} className="mr-4 bg-amber-500 hover:bg-amber-600 text-white">
+                <RefreshCw className="h-4 w-4 mr-2" /> Refresh
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/admin/events')} className="border-gray-300 text-gray-700">
+                View Events
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -521,220 +751,253 @@ const AdminRegistrations = () => {
 
   // Main component render
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
+    <div className="min-h-screen bg-white text-gray-900">
       <AdminHeader />
       
       <div className="flex">
         <AdminSidebar />
         
-        <main className="flex-1 p-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">Registrations</h1>
-              <DataFreshnessIndicator />
-            </div>
-            <div className="mt-4 md:mt-0 flex items-center">
-              <RefreshControls />
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={exportToCSV}
-                className="ml-4 border-amber-500 text-amber-500 hover:bg-amber-50 flex items-center"
-              >
-                <Download className="h-4 w-4 mr-2" /> Export CSV
-              </Button>
-            </div>
-          </div>
-          
-          {newRegistrationsCount > 0 && (
-            <div className="mb-4 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 text-amber-800 p-3 rounded-md flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-2">
-                <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                <span>
-                  {newRegistrationsCount} new registration{newRegistrationsCount > 1 ? 's' : ''} received
-                </span>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-amber-800 hover:text-amber-900 hover:bg-amber-100"
-                onClick={clearNewRegistrationsIndicator}
-              >
-                Dismiss
-              </Button>
-            </div>
-          )}
-          
-          {/* Filters */}
-          <Card className="mb-6 bg-white border border-gray-200 shadow-sm overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100 pb-4 border-b border-gray-200">
-              <CardTitle className="flex items-center text-gray-800">
-                <Filter className="h-4 w-4 mr-2 text-amber-500" /> 
-                Filters and Search
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">Search</label>
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Name, email or event..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="bg-gray-50 border-gray-200 pl-8 text-gray-800 placeholder:text-gray-400 focus-visible:ring-amber-500"
-                    />
+        <main className="flex-1 p-6 bg-gray-50">
+          {/* Use a function with try/catch for rendering the main content safely */}
+          {(function renderMainContent() {
+            try {
+              return (
+                <>
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                      <h1 className="text-3xl font-bold text-gray-800">Registrations</h1>
+                      <DataFreshnessIndicator />
+                    </div>
+                    <div className="mt-4 md:mt-0 flex items-center">
+                      <RefreshControls />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={exportToCSV}
+                        className="ml-4 border-amber-500 text-amber-500 hover:bg-amber-50 flex items-center"
+                      >
+                        <Download className="h-4 w-4 mr-2" /> Export CSV
+                      </Button>
+                    </div>
                   </div>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">Event</label>
-                  <Select value={filterEvent} onValueChange={setFilterEvent}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
-                      <SelectValue placeholder="All Events" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-800">
-                      <SelectItem value="all">All Events</SelectItem>
-                      {events.map(event => (
-                        <SelectItem key={event._id} value={event._id}>{event.title}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">Registration Status</label>
-                  <Select value={filterRegistrationStatus} onValueChange={setFilterRegistrationStatus}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
-                      <SelectValue placeholder="All Statuses" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-800">
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="cancelled">Cancelled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-gray-600 mb-1 block">Payment Status</label>
-                  <Select value={filterPaymentStatus} onValueChange={setFilterPaymentStatus}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
-                      <SelectValue placeholder="All Payments" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 text-gray-800">
-                      <SelectItem value="all">All Payments</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Registrations Table */}
-          <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-            <CardContent className="p-0">
-              <div className="rounded-md">
-                <Table>
-                  <TableHeader className="bg-gray-50 border-b border-gray-200">
-                    <TableRow className="hover:bg-gray-100">
-                      <TableHead className="text-gray-700 font-medium">Participant</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Event</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Registration Date</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Registration Status</TableHead>
-                      <TableHead className="text-gray-700 font-medium">Payment Status</TableHead>
-                      <TableHead className="text-gray-700 font-medium text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredRegistrations.length === 0 ? (
-                      <TableRow className="hover:bg-gray-50 border-b border-gray-200">
-                        <TableCell colSpan={6} className="h-24 text-center text-gray-500">
-                          No registrations found matching the filters
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredRegistrations.map((registration) => (
-                        <TableRow 
-                          key={registration._id} 
-                          className={`hover:bg-gray-50 border-b border-gray-200 ${
-                            registration.isNew && registration.highlightUntil && registration.highlightUntil > new Date().getTime()
-                              ? 'bg-amber-50'
-                              : ''
-                          }`}
-                          onClick={clearNewRegistrationsIndicator}
-                        >
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-700 font-semibold shadow-sm">
-                                {registration.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-900">{registration.name}</div>
-                                <div className="text-sm text-gray-500">{registration.email}</div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium text-gray-800">{registration.event.title}</div>
-                            {registration.teamName && (
-                              <div className="text-sm text-gray-500">Team: {registration.teamName}</div>
+                  
+                  {newRegistrationsCount > 0 && (
+                    <div className="mb-4 bg-gradient-to-r from-amber-50 to-amber-100 border border-amber-200 text-amber-800 p-3 rounded-md flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                        <span>
+                          {newRegistrationsCount} new registration{newRegistrationsCount > 1 ? 's' : ''} received
+                        </span>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-amber-800 hover:text-amber-900 hover:bg-amber-100"
+                        onClick={clearNewRegistrationsIndicator}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {/* Filters */}
+                  <Card className="mb-6 bg-white border border-gray-200 shadow-sm overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-amber-50 to-amber-100 pb-4 border-b border-gray-200">
+                      <CardTitle className="flex items-center text-gray-800">
+                        <Filter className="h-4 w-4 mr-2 text-amber-500" /> 
+                        Filters and Search
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 mb-1 block">Search</label>
+                          <div className="relative">
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                            <Input
+                              placeholder="Name, email or event..."
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="bg-gray-50 border-gray-200 pl-8 text-gray-800 placeholder:text-gray-400 focus-visible:ring-amber-500"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 mb-1 block">Event</label>
+                          <Select value={filterEvent} onValueChange={setFilterEvent}>
+                            <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
+                              <SelectValue placeholder="All Events" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-800">
+                              <SelectItem value="all">All Events</SelectItem>
+                              {events.map(event => (
+                                <SelectItem key={event._id || 'unknown'} value={event._id || 'unknown'}>
+                                  {event.title || 'Unnamed Event'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 mb-1 block">Registration Status</label>
+                          <Select value={filterRegistrationStatus} onValueChange={setFilterRegistrationStatus}>
+                            <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
+                              <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-800">
+                              <SelectItem value="all">All Statuses</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium text-gray-600 mb-1 block">Payment Status</label>
+                          <Select value={filterPaymentStatus} onValueChange={setFilterPaymentStatus}>
+                            <SelectTrigger className="bg-gray-50 border-gray-200 text-gray-800 focus:ring-amber-500">
+                              <SelectValue placeholder="All Payments" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-200 text-gray-800">
+                              <SelectItem value="all">All Payments</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="completed">Completed</SelectItem>
+                              <SelectItem value="failed">Failed</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  {/* Registrations Table */}
+                  <Card className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="rounded-md">
+                        <Table>
+                          <TableHeader className="bg-gray-50 border-b border-gray-200">
+                            <TableRow className="hover:bg-gray-100">
+                              <TableHead className="text-gray-700 font-medium">Participant</TableHead>
+                              <TableHead className="text-gray-700 font-medium">Event</TableHead>
+                              <TableHead className="text-gray-700 font-medium">Registration Date</TableHead>
+                              <TableHead className="text-gray-700 font-medium">Registration Status</TableHead>
+                              <TableHead className="text-gray-700 font-medium">Payment Status</TableHead>
+                              <TableHead className="text-gray-700 font-medium text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {filteredRegistrations.length === 0 ? (
+                              <TableRow className="hover:bg-gray-50 border-b border-gray-200">
+                                <TableCell colSpan={6} className="h-24 text-center text-gray-500">
+                                  No registrations found matching the filters
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              filteredRegistrations.map((registration) => (
+                                <TableRow 
+                                  key={registration._id} 
+                                  className={`hover:bg-gray-50 border-b border-gray-200 ${
+                                    registration.isNew && registration.highlightUntil && registration.highlightUntil > new Date().getTime()
+                                      ? 'bg-amber-50'
+                                      : ''
+                                  }`}
+                                  onClick={clearNewRegistrationsIndicator}
+                                >
+                                  <TableCell className="font-medium">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center text-amber-700 font-semibold shadow-sm">
+                                        {registration.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <div className="font-medium text-gray-900">{registration.name}</div>
+                                        <div className="text-sm text-gray-500">{registration.email}</div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="font-medium text-gray-800">
+                                      {registration.event && registration.event.title 
+                                        ? registration.event.title 
+                                        : 'Unknown Event'}
+                                    </div>
+                                    {registration.teamName && (
+                                      <div className="text-sm text-gray-500">Team: {registration.teamName}</div>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-gray-600">{formatDate(registration.createdAt)}</TableCell>
+                                  <TableCell>
+                                    <StatusBadge status={registration.registrationStatus} type="registration" />
+                                  </TableCell>
+                                  <TableCell>
+                                    <StatusBadge status={registration.paymentStatus} type="payment" />
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full">
+                                          <span className="sr-only">Open menu</span>
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                                            <circle cx="12" cy="12" r="1" />
+                                            <circle cx="12" cy="5" r="1" />
+                                            <circle cx="12" cy="19" r="1" />
+                                          </svg>
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="bg-white border-gray-200 text-gray-800 shadow-lg">
+                                        <DropdownMenuItem 
+                                          onClick={() => handleViewRegistration(registration)}
+                                          className="hover:bg-gray-100 cursor-pointer"
+                                        >
+                                          <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Details
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem 
+                                          onClick={() => handleEditRegistration(registration)}
+                                          className="hover:bg-gray-100 cursor-pointer"
+                                        >
+                                          <Edit className="mr-2 h-4 w-4 text-amber-500" /> Update Status
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem 
+                                          onClick={() => handleDeleteRegistration(registration)}
+                                          className="text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
+                                        >
+                                          <Trash className="mr-2 h-4 w-4" /> Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </TableCell>
+                                </TableRow>
+                              ))
                             )}
-                          </TableCell>
-                          <TableCell className="text-gray-600">{formatDate(registration.createdAt)}</TableCell>
-                          <TableCell>
-                            <StatusBadge status={registration.registrationStatus} type="registration" />
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge status={registration.paymentStatus} type="payment" />
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full">
-                                  <span className="sr-only">Open menu</span>
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                                    <circle cx="12" cy="12" r="1" />
-                                    <circle cx="12" cy="5" r="1" />
-                                    <circle cx="12" cy="19" r="1" />
-                                  </svg>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="bg-white border-gray-200 text-gray-800 shadow-lg">
-                                <DropdownMenuItem 
-                                  onClick={() => handleViewRegistration(registration)}
-                                  className="hover:bg-gray-100 cursor-pointer"
-                                >
-                                  <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleEditRegistration(registration)}
-                                  className="hover:bg-gray-100 cursor-pointer"
-                                >
-                                  <Edit className="mr-2 h-4 w-4 text-amber-500" /> Update Status
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteRegistration(registration)}
-                                  className="text-red-600 hover:bg-red-50 hover:text-red-700 cursor-pointer"
-                                >
-                                  <Trash className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              );
+            } catch (error) {
+              // If rendering fails, show error and repair options
+              handleError(error, 'component rendering');
+              return (
+                <div className="p-6 bg-red-50 rounded-lg border border-red-200 text-red-800">
+                  <h2 className="text-xl font-bold mb-4">Rendering Error</h2>
+                  <p className="mb-4">There was an error rendering the registrations: {error instanceof Error ? error.message : String(error)}</p>
+                  <Button 
+                    onClick={() => {
+                      setLoading(true);
+                      handleManualRefresh();
+                    }} 
+                    className="bg-amber-500 hover:bg-amber-600 text-white"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" /> Reload Data
+                  </Button>
+                </div>
+              );
+            }
+          })()}
         </main>
       </div>
       
@@ -753,7 +1016,9 @@ const AdminRegistrations = () => {
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 mb-1">Event</h3>
-                  <p className="text-gray-900 text-lg font-medium">{selectedRegistration.event.title}</p>
+                  <p className="text-gray-900 text-lg font-medium">
+                    {selectedRegistration.event?.title || 'Unknown Event'}
+                  </p>
                 </div>
                 
                 <div>
@@ -893,7 +1158,9 @@ const AdminRegistrations = () => {
                   <div>
                     <p className="font-medium text-gray-900">{selectedRegistration.name}</p>
                     <p className="text-sm text-gray-600">{selectedRegistration.email}</p>
-                    <p className="text-sm text-gray-600">Event: {selectedRegistration.event.title}</p>
+                    <p className="text-sm text-gray-600">
+                      Event: {selectedRegistration.event?.title || 'Unknown Event'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -974,7 +1241,7 @@ const AdminRegistrations = () => {
               <div className="bg-red-50 border border-red-200 rounded-md p-4 text-red-800">
                 <p><span className="font-medium">Participant:</span> {selectedRegistration.name}</p>
                 <p><span className="font-medium">Email:</span> {selectedRegistration.email}</p>
-                <p><span className="font-medium">Event:</span> {selectedRegistration.event.title}</p>
+                <p><span className="font-medium">Event:</span> {selectedRegistration.event?.title || 'Unknown Event'}</p>
                 <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
                   <AlertTriangle className="h-4 w-4" />
                   All data related to this registration will be permanently deleted.
