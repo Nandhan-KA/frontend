@@ -6,6 +6,7 @@ import Events from '@/components/Events';
 import Schedule from '@/components/Schedule';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
+import Sponsors from '@/components/Sponsors';
 import { GlowingParticles } from '@/components/ui/particles';
 import { FloatingOrbs } from '@/components/ui/animated-elements';
 import { motion, useScroll, useSpring, useTransform } from 'framer-motion';
@@ -32,7 +33,7 @@ const Index = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['hero', 'about', 'events', 'schedule', 'contact'];
+      const sections = ['hero', 'about', 'events', 'sponsors', 'schedule', 'contact'];
       const currentPosition = window.scrollY + 300;
 
       for (const section of sections) {
@@ -131,6 +132,10 @@ const Index = () => {
         <section id="events" className="relative">
           <FloatingOrbs />
           <Events />
+        </section>
+        
+        <section id="sponsors">
+          <Sponsors />
         </section>
         
         <section id="schedule">
