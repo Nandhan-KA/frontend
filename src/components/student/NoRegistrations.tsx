@@ -12,16 +12,16 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 interface NoRegistrationsProps {
-  setActiveTab: (tab: string) => void;
+  // Remove the setActiveTab prop since we're using direct navigation
 }
 
-const NoRegistrations = ({ setActiveTab }: NoRegistrationsProps) => {
+const NoRegistrations = ({}: NoRegistrationsProps) => {
   const [open, setOpen] = useState(true);
   const navigate = useNavigate();
   
   const handleExplore = () => {
     setOpen(false);
-    setActiveTab('events');
+    navigate('/student/dashboard?tab=events', { replace: true });
   };
   
   return (

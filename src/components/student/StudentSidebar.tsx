@@ -199,9 +199,18 @@ const StudentSidebar = ({ registrationCount, onLogout, studentName }: StudentSid
   
   const isActive = (path: string) => {
     if (path.includes('?')) {
-      // For paths with query parameters, match the base path and query
+      // For paths with query parameters, match the base path and exact query parameter
       const [basePath, query] = path.split('?');
-      return location.pathname === basePath && location.search.includes(query);
+      if (location.pathname === basePath) {
+        const searchParams = new URLSearchParams(location.search);
+        const pathParams = new URLSearchParams(query);
+        
+        // Check if the specific tab parameter matches
+        if (pathParams.has('tab') && searchParams.has('tab')) {
+          return pathParams.get('tab') === searchParams.get('tab');
+        }
+      }
+      return false;
     }
     return location.pathname === path;
   };

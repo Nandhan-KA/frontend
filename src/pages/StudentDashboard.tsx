@@ -35,7 +35,8 @@ import { Skeleton } from '../components/ui/skeleton';
 
 interface Event {
   _id: string;
-  name: string;
+  name?: string;
+  title?: string;
   description: string;
   date: string;
   location: string;
@@ -91,11 +92,14 @@ export default function StudentDashboard() {
   const [studentInfo, setStudentInfo] = useState<any>(null);
   const [showNoRegistrationsDialog, setShowNoRegistrationsDialog] = useState(false);
   
-  // Get the active tab from the URL query parameter or default to "events"
-  const [activeTab, setActiveTab] = useState(() => {
+  // Instead of using activeTab state, derive it directly from the URL
+  const getActiveTabFromUrl = () => {
     const params = new URLSearchParams(location.search);
     return params.get('tab') || 'events';
-  });
+  };
+  
+  // Directly get the active tab from URL whenever needed
+  const activeTab = getActiveTabFromUrl();
 
   useEffect(() => {
     const token = localStorage.getItem('studentToken');
@@ -159,6 +163,7 @@ export default function StudentDashboard() {
         try {
           const registrationsRes = await api.get('/api/students/events/registered');
           console.log('Registration data:', registrationsRes.data);
+          console.log('First registration event structure:', registrationsRes.data.registrations?.[0]?.event);
           
           // Parse and set registrations
           const registrationsArray = registrationsRes.data.registrations || [];
@@ -198,13 +203,6 @@ export default function StudentDashboard() {
     
     fetchData();
   }, [navigate, activeTab, location.search]);
-
-  // Update URL when tab changes
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    params.set('tab', activeTab);
-    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
-  }, [activeTab, navigate, location.pathname, location.search]);
 
   // Handle logout
   const handleLogout = () => {
@@ -266,11 +264,26 @@ export default function StudentDashboard() {
           onLogout={handleLogout} 
         />
         <div className="container mx-auto p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <Tabs value={activeTab}>
             <TabsList className="grid grid-cols-3 w-full max-w-lg mx-auto mb-6">
-              <TabsTrigger value="events">Available Events</TabsTrigger>
-              <TabsTrigger value="registered">My Registrations</TabsTrigger>
-              <TabsTrigger value="profile">My Profile</TabsTrigger>
+              <TabsTrigger 
+                value="events"
+                onClick={() => navigate(`/student/dashboard?tab=events`, { replace: true })}
+              >
+                Available Events
+              </TabsTrigger>
+              <TabsTrigger 
+                value="registered"
+                onClick={() => navigate(`/student/dashboard?tab=registered`, { replace: true })}
+              >
+                My Registrations
+              </TabsTrigger>
+              <TabsTrigger 
+                value="profile"
+                onClick={() => navigate(`/student/dashboard?tab=profile`, { replace: true })}
+              >
+                My Profile
+              </TabsTrigger>
             </TabsList>
             
             {/* Available Events Tab */}
@@ -281,14 +294,14 @@ export default function StudentDashboard() {
                     <div className="h-48 overflow-hidden">
                       <img 
                         src={event.image || 'https://via.placeholder.com/300x150?text=Event'} 
-                        alt={event.name}
+                        alt={event.name || "Event"}
                         className="w-full h-full object-cover transition-transform hover:scale-105"
                       />
                     </div>
                     <CardHeader>
-                      <CardTitle className="text-gray-900 text-xl">{event.name}</CardTitle>
+                      <CardTitle className="text-gray-900 text-xl">{event.name || event.title || "Event"}</CardTitle>
                       <CardDescription className="text-gray-500">
-                        {new Date(event.date).toLocaleDateString()} | {event.location}
+                        {event.date ? new Date(event.date).toLocaleDateString() : "May 9th, 2025"} | {event.location || "On Campus"}
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -343,7 +356,7 @@ export default function StudentDashboard() {
                         You haven't registered for any events yet. Browse our exciting lineup and register to participate!
                       </p>
                       <Button 
-                        onClick={() => setActiveTab('events')} 
+                        onClick={() => navigate('/student/dashboard?tab=events', { replace: true })} 
                         className="bg-gold hover:bg-amber-500 text-white"
                       >
                         Browse Events
@@ -363,8 +376,12 @@ export default function StudentDashboard() {
                       <TableBody>
                         {registrations.map((reg) => (
                           <TableRow key={reg._id} className="border-gray-200 hover:bg-gray-50">
-                            <TableCell className="font-medium text-gray-900">{reg.event.name}</TableCell>
-                            <TableCell className="text-gray-700">{new Date(reg.event.date).toLocaleDateString()}</TableCell>
+                            <TableCell className="font-medium text-gray-900">
+                              {reg.event?.title || reg.event?.name || "Event details unavailable"}
+                            </TableCell>
+                            <TableCell className="text-gray-700">
+                              {reg.event?.date ? new Date(reg.event.date).toLocaleDateString() : "May 9th, 2025"}
+                            </TableCell>
                             <TableCell>
                               <span className={`px-2 py-1 rounded-full text-xs ${
                                 reg.registrationStatus === 'confirmed' 
@@ -451,7 +468,7 @@ export default function StudentDashboard() {
       
       {/* Show NoRegistrations component when needed */}
       {showNoRegistrationsDialog && (
-        <NoRegistrations setActiveTab={setActiveTab} />
+        <NoRegistrations />
       )}
     </div>
   );

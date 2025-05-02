@@ -75,6 +75,23 @@ const EventDetail = () => {
       try {
         setLoading(true);
         const response = await publicApi.get(`/api/events/${eventId}`);
+        console.log("Event data:", response.data);
+        console.log("Date value:", response.data.date);
+        console.log("Date type:", typeof response.data.date);
+        
+        // Handle empty or invalid dates
+        if (response.data.date === "" || !response.data.date) {
+          console.warn("Empty or missing date in event data");
+          response.data.date = null;
+        } else {
+          // Check if date is valid
+          const testDate = new Date(response.data.date);
+          if (isNaN(testDate.getTime())) {
+            console.warn("Invalid date format in event data:", response.data.date);
+            response.data.date = null;
+          }
+        }
+        
         setEvent(response.data);
         setError(null);
       } catch (err) {
@@ -284,11 +301,26 @@ const EventDetail = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold mb-2 text-gray-100">Date & Time</h3>
-                          <p className="text-gray-100 text-sm">
-                            {event.date ? new Date(event.date).toLocaleDateString(undefined, 
-                              { year: 'numeric', month: 'long', day: 'numeric' }
-                            ) : 'Date TBA'}
+                          <p className="text-gray-100 text-sm mb-1">
+                            {event.date 
+                              ? (() => {
+                                  try {
+                                    return new Date(event.date).toLocaleDateString(undefined, 
+                                      { year: 'numeric', month: 'long', day: 'numeric' }
+                                    );
+                                  } catch (e) {
+                                    console.error("Error formatting date:", e);
+                                    return 'May 9th, 2025';
+                                  }
+                                })()
+                              : 'May 9th, 2025'}
                           </p>
+                          {event.startTime && event.endTime && (
+                            <p className="text-gray-100 text-sm flex items-center">
+                              <Clock className="text-gold/70 mr-1" size={14} />
+                              {event.startTime} - {event.endTime}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>

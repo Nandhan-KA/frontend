@@ -4,7 +4,7 @@ import { publicApi, api } from '../services/api';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Upload, PlusCircle, MinusCircle, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Upload, PlusCircle, MinusCircle, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 // Adding a module declaration for react-confetti
 import Confetti from 'react-confetti';
 
@@ -37,6 +37,8 @@ interface Event {
   date?: string;
   qrCode?: string;
   upiId?: string;
+  startTime?: string;
+  endTime?: string;
 }
 
 // Define schema for team member
@@ -137,11 +139,26 @@ const EventRegistration = () => {
         setLoading(true);
         const response = await publicApi.get(`/api/events/${eventId}`);
         console.log("Event data:", response.data);
+        console.log("Date value:", response.data.date);
+        console.log("Date type:", typeof response.data.date);
         
         // If location is missing, set a default
         if (!response.data.location) {
           console.warn("Location missing in event data, using default");
           response.data.location = "Meenakshi College of Engineering, Chennai";
+        }
+        
+        // Handle empty or invalid dates
+        if (response.data.date === "" || !response.data.date) {
+          console.warn("Empty or missing date in event data");
+          response.data.date = null;
+        } else {
+          // Check if date is valid
+          const testDate = new Date(response.data.date);
+          if (isNaN(testDate.getTime())) {
+            console.warn("Invalid date format in event data:", response.data.date);
+            response.data.date = null;
+          }
         }
         
         setEvent(response.data);
@@ -409,8 +426,28 @@ const EventRegistration = () => {
               
               <div className="text-gray-300 space-y-1 mb-4">
                 <div>
-                  <span className="font-medium">Date:</span> {event.date ? new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'Date TBA'}
+                  <span className="font-medium">Date:</span> {event.date 
+                    ? (() => {
+                        try {
+                          return new Date(event.date).toLocaleDateString(undefined, 
+                            { year: 'numeric', month: 'long', day: 'numeric' }
+                          );
+                        } catch (e) {
+                          console.error("Error formatting date:", e);
+                          return 'May 9th, 2025';
+                        }
+                      })()
+                    : 'May 9th, 2025'}
                 </div>
+                {event.startTime && event.endTime && (
+                  <div>
+                    <span className="font-medium">Time:</span>{" "}
+                    <span className="flex items-center inline-flex">
+                      <Clock className="text-gold/70 mr-1" size={14} />
+                      {event.startTime} - {event.endTime}
+                    </span>
+                  </div>
+                )}
                 <div>
                   <span className="font-medium">Location:</span> {event.location || 'Meenakshi College of Engineering, Chennai'}
                 </div>
@@ -430,27 +467,28 @@ const EventRegistration = () => {
         </div>
         
         {/* Registration Form */}
-        <Card className="bg-black/50 backdrop-blur-sm border-gray-800">
-          <CardHeader>
-            <CardTitle className="text-gold">Registration Form</CardTitle>
-            <CardDescription className="text-gray-400">
+        <Card className="bg-black/30 backdrop-blur-sm border-gray-800/70 shadow-lg shadow-black/20 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-transparent to-gold/10 pointer-events-none"></div>
+          <CardHeader className="relative z-10">
+            <CardTitle className="text-gold text-2xl font-orbitron">Registration Form</CardTitle>
+            <CardDescription className="text-gray-300">
               Fill out the form below to register for {event.title}
             </CardDescription>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="relative z-10">
             <Tabs value={currentTab} onValueChange={setCurrentTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-8 bg-gray-900/50 border border-gray-800">
-                <TabsTrigger value="details" className="data-[state=active]:bg-gold data-[state=active]:text-black">Personal Details</TabsTrigger>
-                {event.isTeamEvent && <TabsTrigger value="team" className="data-[state=active]:bg-gold data-[state=active]:text-black">Team Details</TabsTrigger>}
-                <TabsTrigger value="payment" className="data-[state=active]:bg-gold data-[state=active]:text-black">Payment</TabsTrigger>
+              <TabsList className="grid grid-cols-3 mb-8 bg-gray-900/30 border border-gray-800/50 rounded-lg overflow-hidden">
+                <TabsTrigger value="details" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold/90 data-[state=active]:to-amber-500/90 data-[state=active]:text-black">Personal Details</TabsTrigger>
+                {event.isTeamEvent && <TabsTrigger value="team" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold/90 data-[state=active]:to-amber-500/90 data-[state=active]:text-black">Team Details</TabsTrigger>}
+                <TabsTrigger value="payment" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-gold/90 data-[state=active]:to-amber-500/90 data-[state=active]:text-black">Payment</TabsTrigger>
               </TabsList>
               
               <form onSubmit={handleSubmit(onSubmit)}>
                 <TabsContent value="details">
                   <div className="space-y-6">
                     {!loggedIn && (
-                      <Alert variant="destructive" className="mb-4 border-red-600 bg-red-950/50 backdrop-blur-sm">
+                      <Alert variant="destructive" className="mb-4 border-red-600/50 bg-red-950/30 backdrop-blur-sm">
                         <AlertCircle className="h-4 w-4" />
                         <AlertTitle>Login Required</AlertTitle>
                         <AlertDescription>
@@ -471,7 +509,7 @@ const EventRegistration = () => {
                         <Label htmlFor="name" className="text-gold">Full Name <span className="text-red-500">*</span></Label>
                         <Input
                           id="name"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('name')}
                         />
                         {errors.name && (
@@ -484,7 +522,7 @@ const EventRegistration = () => {
                         <Input
                           id="email"
                           type="email"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('email')}
                         />
                         {errors.email && (
@@ -496,7 +534,7 @@ const EventRegistration = () => {
                         <Label htmlFor="phone" className="text-gold">Phone Number <span className="text-red-500">*</span></Label>
                         <Input
                           id="phone"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('phone')}
                         />
                         {errors.phone && (
@@ -508,7 +546,7 @@ const EventRegistration = () => {
                         <Label htmlFor="college" className="text-gold">College/University <span className="text-red-500">*</span></Label>
                         <Input
                           id="college"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('college')}
                         />
                         {errors.college && (
@@ -520,7 +558,7 @@ const EventRegistration = () => {
                         <Label htmlFor="department" className="text-gold">Department <span className="text-red-500">*</span></Label>
                         <Input
                           id="department"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('department')}
                         />
                         {errors.department && (
@@ -532,7 +570,7 @@ const EventRegistration = () => {
                         <Label htmlFor="year" className="text-gold">Year of Study <span className="text-red-500">*</span></Label>
                         <select
                           id="year"
-                          className="w-full h-10 px-3 py-2 bg-black/50 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold text-gray-100 mt-1"
+                          className="w-full h-10 px-3 py-2 bg-black/30 border border-gray-700/50 rounded-md focus:outline-none focus:ring-2 focus:ring-gold/50 focus:border-gold/70 text-gray-100 mt-1 transition-all duration-200"
                           {...register('year')}
                         >
                           <option value="">Select Year</option>
@@ -553,7 +591,7 @@ const EventRegistration = () => {
                       <Button 
                         type="button" 
                         onClick={() => setCurrentTab(event.isTeamEvent ? "team" : "payment")}
-                        className="btn-gold rounded-full hover:animate-pulse-glow"
+                        className="bg-gradient-to-r from-gold/90 to-amber-500/90 hover:from-gold hover:to-amber-500 text-black font-medium rounded-full px-6 py-2 hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
                       >
                         Next
                       </Button>
@@ -568,7 +606,7 @@ const EventRegistration = () => {
                         <Label htmlFor="teamName" className="text-gold">Team Name <span className="text-red-500">*</span></Label>
                         <Input
                           id="teamName"
-                          className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                          className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                           {...register('teamName')}
                         />
                       </div>
@@ -581,7 +619,7 @@ const EventRegistration = () => {
                             variant="outline" 
                             size="sm" 
                             onClick={addTeamMember}
-                            className="flex items-center border-gold text-gold hover:bg-gold/10"
+                            className="flex items-center border-gold/50 text-gold hover:bg-gold/10 transition-all duration-200"
                           >
                             <PlusCircle className="h-4 w-4 mr-1" /> Add Member
                           </Button>
@@ -589,7 +627,7 @@ const EventRegistration = () => {
                         
                         <div className="space-y-4">
                           {teamMembers?.map((_, index) => (
-                            <div key={index} className="p-5 bg-black/30 backdrop-blur-sm rounded-lg border border-gray-800 shadow-lg hover:border-gold/50 transition-all">
+                            <div key={index} className="p-5 bg-black/20 backdrop-blur-sm rounded-lg border border-gray-800/50 shadow-lg hover:border-gold/40 hover:shadow-gold/5 transition-all duration-300">
                               <div className="flex justify-between items-center mb-4">
                                 <h4 className="font-medium text-gold font-orbitron">Team Member {index + 1}</h4>
                                 <Button 
@@ -597,7 +635,7 @@ const EventRegistration = () => {
                                   variant="ghost" 
                                   size="sm" 
                                   onClick={() => removeTeamMember(index)}
-                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                  className="h-8 w-8 p-0 text-red-400 hover:text-red-300 hover:bg-red-900/20 transition-all duration-200"
                                 >
                                   <MinusCircle className="h-4 w-4" />
                                 </Button>
@@ -608,7 +646,7 @@ const EventRegistration = () => {
                                   <Label htmlFor={`teamMembers.${index}.name`} className="text-gray-300">Name <span className="text-red-500">*</span></Label>
                                   <Input
                                     id={`teamMembers.${index}.name`}
-                                    className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                                    className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                                     {...register(`teamMembers.${index}.name` as const)}
                                   />
                                   {errors.teamMembers?.[index]?.name && (
@@ -621,7 +659,7 @@ const EventRegistration = () => {
                                   <Input
                                     id={`teamMembers.${index}.email`}
                                     type="email"
-                                    className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                                    className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                                     {...register(`teamMembers.${index}.email` as const)}
                                   />
                                   {errors.teamMembers?.[index]?.email && (
@@ -633,7 +671,7 @@ const EventRegistration = () => {
                                   <Label htmlFor={`teamMembers.${index}.phone`} className="text-gray-300">Phone <span className="text-red-500">*</span></Label>
                                   <Input
                                     id={`teamMembers.${index}.phone`}
-                                    className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                                    className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                                     {...register(`teamMembers.${index}.phone` as const)}
                                   />
                                   {errors.teamMembers?.[index]?.phone && (
@@ -645,7 +683,7 @@ const EventRegistration = () => {
                                   <Label htmlFor={`teamMembers.${index}.college`} className="text-gray-300">College <span className="text-red-500">*</span></Label>
                                   <Input
                                     id={`teamMembers.${index}.college`}
-                                    className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                                    className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                                     {...register(`teamMembers.${index}.college` as const)}
                                   />
                                   {errors.teamMembers?.[index]?.college && (
@@ -683,12 +721,12 @@ const EventRegistration = () => {
                   <div className="space-y-6">
                     {event.registrationFee > 0 ? (
                       <>
-                        <div className="bg-black/40 backdrop-blur-sm p-6 rounded-lg border border-gray-800 shadow-lg mb-6">
+                        <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300 mb-6">
                           <h3 className="text-xl font-orbitron font-bold mb-4 text-gold">Payment Information</h3>
                           
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                              <div className="text-gray-400">Event Fee:</div>
+                              <div className="text-gray-300">Event Fee:</div>
                               <div className="font-medium text-white">₹{event.registrationFee}</div>
                               
                               {event.isTeamEvent && (
@@ -711,7 +749,7 @@ const EventRegistration = () => {
                         
                         <div className="mb-6">
                           <div className="flex justify-center mb-4">
-                            <div className="bg-white p-6 rounded-lg max-w-[220px] shadow-[0_0_20px_rgba(255,215,0,0.2)] animate-pulse-slow">
+                            <div className="bg-white p-6 rounded-lg max-w-[220px] shadow-[0_0_20px_rgba(255,215,0,0.2)] animate-pulse-slow hover:shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all duration-500">
                               <img 
                                 src={event.qrCode || siteSettings.paymentQrCode || "/payment-qr.png"} 
                                 alt="Payment QR Code" 
@@ -737,7 +775,7 @@ const EventRegistration = () => {
                             <Input
                               id="transactionId"
                               placeholder="Enter UPI reference ID / Transaction ID"
-                              className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                              className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                               {...register('transactionId')}
                             />
                             {errors.transactionId && (
@@ -747,7 +785,7 @@ const EventRegistration = () => {
                           
                           <div>
                             <Label htmlFor="paymentScreenshot" className="text-gold">Payment Screenshot <span className="text-red-500">*</span></Label>
-                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700 border-dashed rounded-md hover:border-gold transition-colors duration-200 group bg-black/30 backdrop-blur-sm">
+                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700/50 border-dashed rounded-md hover:border-gold/50 transition-colors duration-300 group bg-black/20 backdrop-blur-sm">
                               <div className="space-y-1 text-center">
                                 {imagePreview ? (
                                   <div className="mb-3">
@@ -787,17 +825,19 @@ const EventRegistration = () => {
                             <Textarea
                               id="additionalInfo"
                               placeholder="Any special requirements or information you'd like to share"
-                              className="bg-black/50 border-gray-700 focus:border-gold focus:ring-1 focus:ring-gold text-gray-100 placeholder:text-gray-500 mt-1"
+                              className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
                               {...register('additionalInfo')}
                             />
                           </div>
                         </div>
                       </>
                     ) : (
-                      <div className="text-center py-6 bg-black/40 backdrop-blur-sm rounded-lg border border-gray-800 shadow-lg">
-                        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                      <div className="text-center py-8 bg-black/20 backdrop-blur-sm rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300">
+                        <div className="bg-green-500/10 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
+                          <CheckCircle className="h-10 w-10 text-green-400" />
+                        </div>
                         <h3 className="text-xl font-orbitron font-bold mb-2 text-gold">Free Registration</h3>
-                        <p className="text-gray-400 mb-4">
+                        <p className="text-gray-300 mb-4 max-w-md mx-auto">
                           This event has no registration fee. Click the register button below to complete your registration.
                         </p>
                       </div>
@@ -808,13 +848,13 @@ const EventRegistration = () => {
                         type="button" 
                         variant="outline" 
                         onClick={() => setCurrentTab(event.isTeamEvent ? "team" : "details")}
-                        className="border-gray-700 hover:border-gold hover:text-gold"
+                        className="border-gray-700/50 hover:border-gold/70 hover:text-gold transition-all duration-200"
                       >
                         Back
                       </Button>
                       <Button 
                         type="submit" 
-                        className="btn-gold rounded-full hover:animate-pulse-glow"
+                        className="bg-gradient-to-r from-gold/90 to-amber-500/90 hover:from-gold hover:to-amber-500 text-black font-medium rounded-full px-6 py-2 hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
                         disabled={submitting || !isValid}
                       >
                         {submitting ? (
