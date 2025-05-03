@@ -50,12 +50,6 @@ const Sponsors = () => {
               transition={{ duration: 0.5 }}
             >
               <h3 className="text-xl md:text-2xl font-medium text-gold uppercase tracking-wide inline-block relative">
-                <motion.span
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "100%" }}
-                  transition={{ duration: 1.2, delay: 0.3 }}
-                  className="absolute -top-6 left-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent"
-                ></motion.span>
                 Sponsored By
                 <motion.span
                   initial={{ width: 0 }}
@@ -140,12 +134,6 @@ const Sponsors = () => {
               transition={{ duration: 0.5 }}
             >
               <h3 className="text-xl md:text-2xl font-medium text-gold uppercase tracking-wide inline-block relative">
-                <motion.span
-                  initial={{ width: 0 }}
-                  whileInView={{ width: "100%" }}
-                  transition={{ duration: 1.2, delay: 0.3 }}
-                  className="absolute -top-6 left-0 h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent"
-                ></motion.span>
                 Co-Sponsored By
                 <motion.span
                   initial={{ width: 0 }}
