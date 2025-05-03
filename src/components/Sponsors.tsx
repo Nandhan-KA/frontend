@@ -33,7 +33,7 @@ const Sponsors = () => {
             We're proud to partner with these outstanding organizations to bring you Techshethra 2025
           </motion.p>
         </div>
-
+        
         <div className="grid grid-cols-1 gap-20">
           {/* Main sponsor with enhanced animations */}
           <motion.div 
@@ -67,7 +67,7 @@ const Sponsors = () => {
             </motion.div>
             
             <motion.div 
-              className="p-8 md:p-12 bg-black/30 backdrop-blur-sm rounded-xl border border-white/5 shadow-xl hover:shadow-gold/20 transition-all duration-500"
+              className="p-4 md:p-6 bg-black/30 backdrop-blur-sm rounded-xl border border-white/5 shadow-xl hover:shadow-gold/20 transition-all duration-500"
               whileHover={{ 
                 y: -10, 
                 boxShadow: "0 20px 25px -5px rgba(255, 215, 0, 0.1), 0 10px 10px -5px rgba(255, 215, 0, 0.04)" 
@@ -87,22 +87,22 @@ const Sponsors = () => {
                 <motion.img 
                   src="/poorvika.png" 
                   alt="Poorvika" 
-                  className="h-36 md:h-48 mx-auto object-contain relative z-10"
+                  className="h-52 md:h-72 mx-auto object-contain relative z-10"
                   animate={{ 
                     y: [0, -8, 0],
-                    scale: [1, 1.03, 1]
+                    scale: [1, 1.05, 1],
+                    filter: ["brightness(1)", "brightness(1.1)", "brightness(1)"]
                   }}
                   transition={{ 
                     repeat: Infinity,
                     duration: 4,
                     ease: "easeInOut"
                   }}
-                  whileHover={{ scale: 1.08 }}
                 />
               </motion.div>
               
               <motion.div 
-                className="mt-8 bg-gradient-to-r from-transparent via-white/10 to-transparent h-[1px]"
+                className="mt-4 bg-gradient-to-r from-transparent via-white/10 to-transparent h-[1px]"
                 initial={{ opacity: 0, width: "0%" }}
                 whileInView={{ opacity: 1, width: "100%" }}
                 transition={{ duration: 1 }}
@@ -110,7 +110,7 @@ const Sponsors = () => {
               ></motion.div>
               
               <motion.p 
-                className="mt-8 text-gray-300 max-w-2xl mx-auto"
+                className="mt-4 text-gray-300 max-w-2xl mx-auto"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}
@@ -157,7 +157,7 @@ const Sponsors = () => {
             </motion.div>
             
             <motion.div 
-              className="p-8 md:p-12 bg-black/30 backdrop-blur-sm rounded-xl border border-white/5 shadow-xl hover:shadow-gold/20 transition-all duration-500"
+              className="p-4 md:p-6 bg-black/30 backdrop-blur-sm rounded-xl border border-white/5 shadow-xl hover:shadow-gold/20 transition-all duration-500"
               whileHover={{ 
                 y: -10, 
                 boxShadow: "0 20px 25px -5px rgba(255, 215, 0, 0.1), 0 10px 10px -5px rgba(255, 215, 0, 0.04)" 
@@ -177,21 +177,22 @@ const Sponsors = () => {
                 <motion.img 
                   src="/scholarpeak.png" 
                   alt="Scholarpeak" 
-                  className="h-32 md:h-40 mx-auto object-contain relative z-10"
+                  className="h-26 md:h-32 mx-auto object-contain relative z-10"
                   animate={{ 
+                    scale: [1, 1.04, 1],
+                    opacity: [0.95, 1, 0.95],
                     boxShadow: ["0 0 10px rgba(255,215,0,0)", "0 0 20px rgba(255,215,0,0.2)", "0 0 10px rgba(255,215,0,0)"]
                   }}
                   transition={{ 
                     repeat: Infinity,
-                    duration: 3,
+                    duration: 3.5,
                     ease: "easeInOut"
                   }}
-                  whileHover={{ scale: 1.08 }}
                 />
               </motion.div>
               
               <motion.div 
-                className="mt-8 bg-gradient-to-r from-transparent via-white/10 to-transparent h-[1px]"
+                className="mt-4 bg-gradient-to-r from-transparent via-white/10 to-transparent h-[1px]"
                 initial={{ opacity: 0, width: "0%" }}
                 whileInView={{ opacity: 1, width: "100%" }}
                 transition={{ duration: 1 }}
@@ -199,7 +200,7 @@ const Sponsors = () => {
               ></motion.div>
               
               <motion.p 
-                className="mt-8 text-gray-300 max-w-2xl mx-auto"
+                className="mt-4 text-gray-300 max-w-2xl mx-auto"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.4 }}

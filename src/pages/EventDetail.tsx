@@ -24,7 +24,6 @@ import {
   Code,
   Mic
 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 interface Event {
@@ -108,7 +107,6 @@ const EventDetail = () => {
   if (loading) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen bg-gradient-to-b from-[#0e0e10] to-[#121215] flex flex-col justify-center items-center">
           <div className="animate-pulse-glow rounded-full h-16 w-16 border-4 border-amber-500 border-t-transparent animate-spin mb-5"></div>
           <p className="text-gold font-medium animate-pulse">Loading event details...</p>
@@ -120,7 +118,6 @@ const EventDetail = () => {
   if (error || !event) {
     return (
       <>
-        <Navbar />
         <div className="min-h-screen bg-gradient-to-b from-[#0e0e10] to-[#121215] flex justify-center items-center">
           <div className="text-center p-8 max-w-lg bg-black/30 backdrop-blur-md rounded-xl border border-red-900/30">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
@@ -141,8 +138,6 @@ const EventDetail = () => {
 
   return (
     <>
-      <Navbar />
-      
       {/* Hero Section with Parallax Effect */}
       <div className="relative h-[35vh] md:h-[40vh] overflow-hidden">
         <div 
