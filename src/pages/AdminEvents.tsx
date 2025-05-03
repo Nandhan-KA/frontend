@@ -879,10 +879,8 @@ const AdminEvents = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-700 border-gray-600">
                       <SelectItem value="competition">Competition</SelectItem>
-                      <SelectItem value="workshop">Workshop</SelectItem>
-                      <SelectItem value="hackathon">Hackathon</SelectItem>
-                      <SelectItem value="talk">Talk</SelectItem>
-                      <SelectItem value="panel">Panel</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="nontechnical">Non Technical</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -1423,10 +1421,8 @@ const AdminEvents = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-gray-700 border-gray-600">
                       <SelectItem value="competition">Competition</SelectItem>
-                      <SelectItem value="workshop">Workshop</SelectItem>
-                      <SelectItem value="hackathon">Hackathon</SelectItem>
-                      <SelectItem value="talk">Talk</SelectItem>
-                      <SelectItem value="panel">Panel</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="nontechnical">Non Technical</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

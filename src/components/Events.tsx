@@ -10,17 +10,11 @@ const eventCategories = [{
   id: 'competition',
   name: 'Competitions'
 }, {
-  id: 'workshop',
-  name: 'Workshops'
+  id: 'technical',
+  name: 'Technical'
 }, {
-  id: 'hackathon',
-  name: 'Hackathons'
-}, {
-  id: 'talk',
-  name: 'Talks'
-}, {
-  id: 'panel',
-  name: 'Panels'
+  id: 'nontechnical',
+  name: 'Non Technical'
 }];
 
 interface Event {
