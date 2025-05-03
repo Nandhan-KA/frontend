@@ -28,7 +28,7 @@ const Navbar = () => {
       }
       
       // Detect active section
-      const sections = ['about', 'events', 'schedule', 'speakers', 'sponsors', 'registration', 'contact'];
+      const sections = ['about', 'events', 'speakers', 'sponsors', 'registration', 'contact'];
       let currentSection = '';
       
       for (const section of sections) {
@@ -54,7 +54,6 @@ const Navbar = () => {
     { name: 'About', href: '#about' },
     { name: 'Events', href: '#events' },
     { name: 'Sponsors', href: '#sponsors' },
-    { name: 'Schedule', href: '#schedule' },
     { name: 'Contact', href: '#contact' }
   ];
 

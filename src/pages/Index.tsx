@@ -3,7 +3,6 @@ import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
 import About from '@/components/About';
 import Events from '@/components/Events';
-import Schedule from '@/components/Schedule';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import Sponsors from '@/components/Sponsors';
@@ -33,7 +32,7 @@ const Index = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['hero', 'about', 'events', 'sponsors', 'schedule', 'contact'];
+      const sections = ['hero', 'about', 'events', 'sponsors', 'contact'];
       const currentPosition = window.scrollY + 300;
 
       for (const section of sections) {
@@ -136,10 +135,6 @@ const Index = () => {
         
         <section id="sponsors">
           <Sponsors />
-        </section>
-        
-        <section id="schedule">
-          <Schedule />
         </section>
         
         <section id="contact">
