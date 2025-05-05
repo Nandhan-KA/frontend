@@ -336,7 +336,7 @@ const AdminEvents = () => {
     }
     
     if (isNaN(formData.registrationFee) || formData.registrationFee < 0) {
-      errors.price = "Price must be a valid number";
+      errors.price = "Registration fee must be a valid number";
     }
     
     if (formData.isTeamEvent && (formData.teamSize.max < 2 || formData.teamSize.max > 10)) {
@@ -347,13 +347,16 @@ const AdminEvents = () => {
       errors.capacity = "Capacity must be a valid number greater than 0";
     }
     
-    if (formData.registrationFee > 0 && !formData.qrCode?.trim()) {
+    // Check if registration fee is greater than 0 to require QR code and UPI ID
+    const isPaid = formData.registrationFee > 0;
+    
+    if (isPaid && !formData.qrCode?.trim()) {
       errors.qrCode = "QR code is required for paid events";
     } else if (formData.qrCode && !isValidUrl(formData.qrCode)) {
       errors.qrCode = "Please enter a valid URL for QR code";
     }
     
-    if (formData.registrationFee > 0 && !formData.upiId?.trim()) {
+    if (isPaid && !formData.upiId?.trim()) {
       errors.upiId = "UPI ID is required for paid events";
     }
     
@@ -886,14 +889,14 @@ const AdminEvents = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="price" className="flex items-center justify-between">
-                    Price (₹)
+                  <Label htmlFor="registrationFee" className="flex items-center justify-between">
+                    Registration Fee (₹)
                     {formErrors.price && (
                       <span className="text-red-400 text-xs">{formErrors.price}</span>
                     )}
                   </Label>
                   <Input
-                    id="price"
+                    id="registrationFee"
                     name="registrationFee"
                     type="number"
                     min="0"
@@ -1428,14 +1431,14 @@ const AdminEvents = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="edit-price" className="flex items-center justify-between">
-                    Price (₹)
+                  <Label htmlFor="edit-registrationFee" className="flex items-center justify-between">
+                    Registration Fee (₹)
                     {formErrors.price && (
                       <span className="text-red-400 text-xs">{formErrors.price}</span>
                     )}
                   </Label>
                   <Input
-                    id="edit-price"
+                    id="edit-registrationFee"
                     name="registrationFee"
                     type="number"
                     min="0"

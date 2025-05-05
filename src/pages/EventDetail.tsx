@@ -182,7 +182,7 @@ const EventDetail = () => {
             )}
             <span className="text-sm font-medium bg-green-600/20 text-green-400 px-3 py-1 rounded-full flex items-center">
               <CircleDollarSign size={14} className="mr-1.5" />
-              {event.registrationFee === 0 ? 'Free Entry' : `Entry Fee: ₹${event.registrationFee}`}
+              {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free Entry'}
             </span>
             {event.date && (
               <span className="text-sm font-medium bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full flex items-center">
@@ -359,13 +359,15 @@ const EventDetail = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold mb-2 text-gray-100">Registration Fee</h3>
-                          <p className="text-gray-100 text-sm">
-                            {event.registrationFee === 0 ? (
+                          {event.registrationFee === 0 ? (
+                            <p className="text-gray-100 text-sm">
                               <span className="text-green-300 font-medium">Free Entry</span>
-                            ) : (
-                              <>₹{event.registrationFee} per {event.isTeamEvent ? 'team' : 'person'}</>
-                            )}
-                          </p>
+                            </p>
+                          ) : (
+                            <p className="text-gray-100 text-sm">
+                              <span className="text-gray-300 mr-2">Fee:</span> ₹{event.registrationFee} per {event.isTeamEvent ? 'team' : 'person'}
+                            </p>
+                          )}
                           
                           {event.registrationFee > 0 && event.upiId && (
                             <p className="text-gray-200 text-xs mt-2 flex items-center">
@@ -436,78 +438,74 @@ const EventDetail = () => {
                     <h2 className="text-2xl font-bold text-white">Prizes & Rewards</h2>
                   </div>
                   
-                  {(event.prizes && (event.prizes.first || event.prizes.second || event.prizes.third || event.prizes.other)) ? (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* First Prize */}
-                        {event.prizes.first && (
-                          <div className="relative bg-gradient-to-b from-[#FFD700]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-yellow-500/30 shadow-lg shadow-black/30">
-                            <div className="absolute -top-6 -right-6 bg-[#FFD700]/10 w-24 h-24 rounded-full blur-2xl group-hover:w-32 group-hover:h-32 transition-all duration-700"></div>
-                            <div className="relative">
-                              <div className="flex justify-center mb-4">
-                                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse-glow">
-                                  <Trophy className="text-black" size={32} />
-                                </div>
-                              </div>
-                              <h3 className="text-center text-xl font-bold text-yellow-300 mb-2">1st Prize</h3>
-                              <p className="text-center text-gray-100 font-semibold">{event.prizes.first}</p>
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* First Prize */}
+                      <div className="relative bg-gradient-to-b from-[#FFD700]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-yellow-500/30 shadow-lg shadow-black/30">
+                        <div className="absolute -top-6 -right-6 bg-[#FFD700]/10 w-24 h-24 rounded-full blur-2xl group-hover:w-32 group-hover:h-32 transition-all duration-700"></div>
+                        <div className="relative">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-yellow-300 to-amber-500 animate-pulse-glow">
+                              <Trophy className="text-black" size={32} />
                             </div>
                           </div>
-                        )}
-                        
-                        {/* Second Prize */}
-                        {event.prizes.second && (
-                          <div className="relative bg-gradient-to-b from-[#C0C0C0]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-gray-400/30 shadow-lg shadow-black/30">
-                            <div className="absolute -top-6 -right-6 bg-[#C0C0C0]/10 w-20 h-20 rounded-full blur-2xl group-hover:w-28 group-hover:h-28 transition-all duration-700"></div>
-                            <div className="relative">
-                              <div className="flex justify-center mb-4">
-                                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-gray-300 to-gray-400">
-                                  <Medal className="text-black" size={32} />
-                                </div>
-                              </div>
-                              <h3 className="text-center text-xl font-bold text-gray-300 mb-2">2nd Prize</h3>
-                              <p className="text-center text-gray-100 font-semibold">{event.prizes.second}</p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        {/* Third Prize */}
-                        {event.prizes.third && (
-                          <div className="relative bg-gradient-to-b from-[#CD7F32]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-amber-700/30 shadow-lg shadow-black/30">
-                            <div className="absolute -top-6 -right-6 bg-[#CD7F32]/10 w-20 h-20 rounded-full blur-2xl group-hover:w-28 group-hover:h-28 transition-all duration-700"></div>
-                            <div className="relative">
-                              <div className="flex justify-center mb-4">
-                                <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-orange-300 to-amber-700">
-                                  <Medal className="text-black" size={32} />
-                                </div>
-                              </div>
-                              <h3 className="text-center text-xl font-bold text-orange-300 mb-2">3rd Prize</h3>
-                              <p className="text-center text-gray-100 font-semibold">{event.prizes.third}</p>
-                            </div>
-                          </div>
-                        )}
+                          <h3 className="text-center text-xl font-bold text-yellow-300 mb-2">1st Prize</h3>
+                          <p className="text-center text-gray-100 font-semibold">
+                            {event.prizes?.first ? event.prizes.first : 
+                              event.eventType === 'technical' ? '₹1000' : 
+                              event.eventType === 'nontechnical' ? '₹1200' : 
+                              '₹1000'}
+                          </p>
+                        </div>
                       </div>
                       
-                      {/* Other Prizes */}
-                      {event.prizes.other && (
-                        <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 shadow-lg shadow-black/30">
-                          <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-100">
-                            <Award size={18} className="text-gold mr-2" /> 
-                            Additional Rewards
-                          </h3>
-                          <p className="text-gray-100 whitespace-pre-line">{event.prizes.other}</p>
+                      {/* Second Prize */}
+                      <div className="relative bg-gradient-to-b from-[#C0C0C0]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-gray-400/30 shadow-lg shadow-black/30">
+                        <div className="absolute -top-6 -right-6 bg-[#C0C0C0]/10 w-20 h-20 rounded-full blur-2xl group-hover:w-28 group-hover:h-28 transition-all duration-700"></div>
+                        <div className="relative">
+                          <div className="flex justify-center mb-4">
+                            <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-gray-300 to-gray-400">
+                              <Medal className="text-black" size={32} />
+                            </div>
+                          </div>
+                          <h3 className="text-center text-xl font-bold text-gray-300 mb-2">2nd Prize</h3>
+                          <p className="text-center text-gray-100 font-semibold">
+                            {event.prizes?.second ? event.prizes.second : 
+                              event.eventType === 'technical' ? '₹500' : 
+                              event.eventType === 'nontechnical' ? '₹600' : 
+                              '₹500'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Third Prize - Only show if specified in data */}
+                      {event.prizes?.third && (
+                        <div className="relative bg-gradient-to-b from-[#CD7F32]/20 to-black/30 backdrop-blur-sm rounded-xl p-6 transform transition-all hover:scale-105 duration-500 group overflow-hidden border border-amber-700/30 shadow-lg shadow-black/30">
+                          <div className="absolute -top-6 -right-6 bg-[#CD7F32]/10 w-20 h-20 rounded-full blur-2xl group-hover:w-28 group-hover:h-28 transition-all duration-700"></div>
+                          <div className="relative">
+                            <div className="flex justify-center mb-4">
+                              <div className="w-16 h-16 flex items-center justify-center rounded-full bg-gradient-to-r from-orange-300 to-amber-700">
+                                <Medal className="text-black" size={32} />
+                              </div>
+                            </div>
+                            <h3 className="text-center text-xl font-bold text-orange-300 mb-2">3rd Prize</h3>
+                            <p className="text-center text-gray-100 font-semibold">{event.prizes.third}</p>
+                          </div>
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <div className="bg-black/30 backdrop-blur-sm rounded-xl p-8 text-center border border-gray-800/50">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-800/50 mb-4">
-                        <Award className="text-gray-400" size={24} />
+                    
+                    {/* Other Prizes */}
+                    {event.prizes?.other && (
+                      <div className="bg-black/30 backdrop-blur-sm rounded-xl p-6 border border-gray-800/50 shadow-lg shadow-black/30">
+                        <h3 className="text-xl font-semibold mb-4 flex items-center text-gray-100">
+                          <Award size={18} className="text-gold mr-2" /> 
+                          Additional Rewards
+                        </h3>
+                        <p className="text-gray-100 whitespace-pre-line">{event.prizes.other}</p>
                       </div>
-                      <h3 className="text-xl font-semibold mb-2 text-gray-100">Prizes Coming Soon</h3>
-                      <p className="text-gray-200">Prize details will be announced soon.</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
               
@@ -591,30 +589,33 @@ const EventDetail = () => {
                     Register Now
                   </Link>
 
-                  {event.registrationFee > 0 && (
-                    <div className="mt-4 bg-black/50 rounded-lg p-3 border border-gray-800">
-                      <p className="text-sm text-gray-100 flex items-center">
-                        <CircleDollarSign size={14} className="mr-2 text-gold" />
-                        Registration Fee: <span className="font-semibold ml-1">₹{event.registrationFee}</span>
+                  <div className="mt-4 bg-black/50 rounded-lg p-3 border border-gray-800">
+                    <p className="text-sm text-gray-100 flex items-center">
+                      <CircleDollarSign size={14} className="mr-2 text-gold" />
+                      Registration Fee:
+                    </p>
+                    {event.registrationFee > 0 && (
+                      <p className="text-sm text-gray-100 ml-6 mt-1">
+                        <span className="font-semibold">₹{event.registrationFee}</span>
                       </p>
-                      {event.qrCode && (
-                        <div className="mt-2">
-                          <p className="text-xs text-gray-200 mb-1">Scan QR to pay:</p>
-                          <div className="flex justify-center bg-white p-2 rounded-md">
-                            <img 
-                              src={event.qrCode} 
-                              alt="Payment QR" 
-                              className="h-32 w-32 object-contain"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = "https://via.placeholder.com/150x150?text=QR+Code";
-                              }}
-                            />
-                          </div>
+                    )}
+                    {event.qrCode && (
+                      <div className="mt-2">
+                        <p className="text-xs text-gray-200 mb-1">Scan QR to pay:</p>
+                        <div className="flex justify-center bg-white p-2 rounded-md">
+                          <img 
+                            src={event.qrCode} 
+                            alt="Payment QR" 
+                            className="h-32 w-32 object-contain"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "https://via.placeholder.com/150x150?text=QR+Code";
+                            }}
+                          />
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 {/* Event Stats */}
@@ -643,7 +644,13 @@ const EventDetail = () => {
                     </div>
                     <div className="p-4 text-center">
                       <p className="text-gray-200 text-xs mb-1">Entry</p>
-                      <p className="font-semibold text-white">{event.registrationFee === 0 ? 'Free' : `₹${event.registrationFee}`}</p>
+                      <p className="font-semibold text-white">
+                        {event.registrationFee === 0 ? (
+                          'Free'
+                        ) : (
+                          <span className="text-gray-300 mr-2">₹{event.registrationFee}</span>
+                        )}
+                      </p>
                     </div>
                   </div>
                 </div>

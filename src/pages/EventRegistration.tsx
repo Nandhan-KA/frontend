@@ -452,7 +452,12 @@ const EventRegistration = () => {
                   <span className="font-medium">Location:</span> {event.location || 'Meenakshi College of Engineering, Chennai'}
                 </div>
                 <div>
-                  <span className="font-medium">Registration Fee:</span> {event.registrationFee === 0 ? 'Free' : `₹${event.registrationFee}`}
+                  <span className="font-medium">Registration Fee:</span>{' '}
+                  {event.registrationFee === 0 ? (
+                    'Free'
+                  ) : (
+                    <span>₹{event.registrationFee}</span>
+                  )}
                 </div>
                 <div>
                   <span className="font-medium">Capacity:</span> {event.capacity} participants
@@ -727,7 +732,9 @@ const EventRegistration = () => {
                           <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                               <div className="text-gray-300">Event Fee:</div>
-                              <div className="font-medium text-white">₹{event.registrationFee}</div>
+                              <div className="font-medium text-white">
+                                {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
+                              </div>
                               
                               {event.isTeamEvent && (
                                 <>
@@ -742,7 +749,9 @@ const EventRegistration = () => {
                               <div className="col-span-2 border-t border-gray-700 my-2"></div>
                               
                               <div className="text-gray-400 font-medium">Total Amount:</div>
-                              <div className="font-bold text-gold text-xl">₹{event.registrationFee}</div>
+                              <div className="font-bold text-gold text-xl">
+                                ₹{event.registrationFee}
+                              </div>
                             </div>
                           </div>
                         </div>
