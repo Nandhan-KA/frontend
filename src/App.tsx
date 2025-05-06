@@ -13,6 +13,7 @@ import AdminEvents from "./pages/AdminEvents";
 import AdminStudents from "./pages/AdminStudents";
 import AdminSettings from "./pages/AdminSettings";
 import AdminRegistrations from "./pages/AdminRegistrations";
+import AdminSecurityPage from "./pages/AdminSecurityPage";
 import StudentRegister from "./pages/StudentRegister";
 import StudentLogin from "./pages/StudentLogin";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -85,6 +86,7 @@ const App = () => {
               <Route path="/admin/students" element={<AdminStudents />} />
               <Route path="/admin/registrations" element={<AdminRegistrations />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/security" element={<AdminSecurityPage />} />
               {/* Student Routes */}
               <Route path="/student/register" element={<StudentRegister />} />
               <Route path="/student/login" element={<StudentLogin />} />

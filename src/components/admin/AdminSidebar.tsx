@@ -13,7 +13,9 @@ import {
   CreditCard,
   FileText,
   Home,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  Shield
 } from 'lucide-react';
 
 import { cn } from "@/lib/utils";
@@ -176,6 +178,12 @@ const AdminSidebar = () => {
       icon: <Settings size={18} />, 
       path: '/admin/settings',
       id: 'settings'
+    },
+    { 
+      name: 'Security', 
+      icon: <Shield size={18} />, 
+      path: '/admin/security',
+      id: 'security'
     }
   ];
   
@@ -218,7 +226,7 @@ const AdminSidebar = () => {
         <div className="mb-6">
           <p className="text-xs uppercase text-gray-600 font-bold tracking-wider mb-2 px-4 font-heading">Management</p>
           <div className="space-y-1">
-            {navItems.slice(3, 8).map((item) => (
+            {navItems.slice(3, 9).map((item) => (
               <NavItem 
                 key={item.id}
                 icon={item.icon}
@@ -232,6 +240,45 @@ const AdminSidebar = () => {
             ))}
           </div>
         </div>
+        
+        {/* SETTINGS */}
+        <Link
+          to="/admin/settings"
+          className={`text-sm font-medium w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+            location.pathname === '/admin/settings' 
+              ? 'bg-amber-100 text-amber-800' 
+              : 'text-gray-700 hover:bg-gray-200/50'
+          }`}
+        >
+          <Settings size={18} />
+          <span>Settings</span>
+        </Link>
+        
+        {/* SECURITY */}
+        <Link
+          to="/admin/security"
+          className={`text-sm font-medium w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+            location.pathname === '/admin/security' 
+              ? 'bg-amber-100 text-amber-800' 
+              : 'text-gray-700 hover:bg-gray-200/50'
+          }`}
+        >
+          <Shield size={18} />
+          <span>Security</span>
+        </Link>
+        
+        {/* LOGOUT */}
+        <Link
+          to="/admin/logout"
+          className={`text-sm font-medium w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
+            location.pathname === '/admin/logout' 
+              ? 'bg-amber-100 text-amber-800' 
+              : 'text-gray-700 hover:bg-gray-200/50'
+          }`}
+        >
+          <LogOut size={18} />
+          <span>Logout</span>
+        </Link>
       </div>
       
       {/* Add regular style tag without jsx */}
