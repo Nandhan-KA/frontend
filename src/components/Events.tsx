@@ -25,6 +25,10 @@ interface Event {
   image: string;
   location: string;
   registrationFee: number;
+  registrationFees?: {
+    solo: number;
+    team: number;
+  };
   isTeamEvent: boolean;
   teamSize: {
     min: number;
@@ -162,9 +166,29 @@ const Events = () => {
                         Team (Max: {event.teamSize.max})
                       </span>
                     )}
-                    <span className="text-xs font-medium bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full">
-                      {event.registrationFee === 0 ? 'Free Entry' : `₹${event.registrationFee}`}
-                    </span>
+                    {event.registrationFees ? (
+                      <>
+                        {event.registrationFees.solo > 0 && (
+                          <span className="text-xs font-medium bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full">
+                            Solo: ₹{event.registrationFees.solo}
+                          </span>
+                        )}
+                        {event.registrationFees.team > 0 && (
+                          <span className="text-xs font-medium bg-green-600/20 text-green-400 px-2 py-1 rounded-full">
+                            Team: ₹{event.registrationFees.team}
+                          </span>
+                        )}
+                        {event.registrationFees.solo === 0 && event.registrationFees.team === 0 && (
+                          <span className="text-xs font-medium bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full">
+                            Free Entry
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xs font-medium bg-purple-600/20 text-purple-400 px-2 py-1 rounded-full">
+                        Free Entry
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-xl font-bold mb-2 group-hover:text-gold transition-colors">{event.title}</h3>
                   <p className="text-gray-400 text-sm mb-4">

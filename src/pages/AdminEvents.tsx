@@ -66,7 +66,10 @@ interface Event {
   date: string;
   location: string;
   eventType: string;
-  registrationFee: number;
+  registrationFees: {
+    solo: number;
+    team: number;
+  };
   image: string;
   qrCode?: string;
   upiId?: string;
@@ -125,7 +128,10 @@ const AdminEvents = () => {
     date: '',
     location: '',
     eventType: 'competition',
-    registrationFee: 0,
+    registrationFees: {
+      solo: 0,
+      team: 0
+    },
     image: '',
     qrCode: '',
     upiId: '',
@@ -161,13 +167,13 @@ const AdminEvents = () => {
   // Show/hide QR code field based on registration fee
   useEffect(() => {
     // If registration fee is set to 0 and we have errors for QR code, clear them
-    if (formData.registrationFee === 0 && formErrors.qrCode) {
+    if (formData.registrationFees.solo === 0 && formErrors.qrCode) {
       setFormErrors({
         ...formErrors,
         qrCode: undefined
       });
     }
-  }, [formData.registrationFee]);
+  }, [formData.registrationFees.solo]);
 
   const fetchEvents = async () => {
     try {
@@ -189,7 +195,7 @@ const AdminEvents = () => {
         date: event.date || '',
         location: event.location || '',
         eventType: event.eventType,
-        registrationFee: event.registrationFee || 0,
+        registrationFees: event.registrationFees || { solo: 0, team: 0 },
         image: event.image,
         qrCode: event.qrCode || '',
         upiId: event.upiId || '',
@@ -271,7 +277,10 @@ const AdminEvents = () => {
       date: '',
       location: '',
       eventType: 'competition',
-      registrationFee: 0,
+      registrationFees: {
+        solo: 0,
+        team: 0
+      },
       image: '',
       qrCode: '',
       upiId: '',
@@ -335,8 +344,12 @@ const AdminEvents = () => {
       errors.image = "Please enter a valid URL";
     }
     
-    if (isNaN(formData.registrationFee) || formData.registrationFee < 0) {
-      errors.price = "Registration fee must be a valid number";
+    if (isNaN(formData.registrationFees.solo) || formData.registrationFees.solo < 0) {
+      errors.price = "Solo registration fee must be a valid number";
+    }
+    
+    if (isNaN(formData.registrationFees.team) || formData.registrationFees.team < 0) {
+      errors.price = "Team registration fee must be a valid number";
     }
     
     if (formData.isTeamEvent && (formData.teamSize.max < 2 || formData.teamSize.max > 10)) {
@@ -348,7 +361,7 @@ const AdminEvents = () => {
     }
     
     // Check if registration fee is greater than 0 to require QR code and UPI ID
-    const isPaid = formData.registrationFee > 0;
+    const isPaid = formData.registrationFees.solo > 0 || formData.registrationFees.team > 0;
     
     if (isPaid && !formData.qrCode?.trim()) {
       errors.qrCode = "QR code is required for paid events";
@@ -383,27 +396,27 @@ const AdminEvents = () => {
     setFormData({
       title: event.title || '',
       description: event.description || '',
-      date: event.date ? new Date(event.date).toISOString().split('T')[0] : '',
+      date: event.date || '',
       location: event.location || '',
       eventType: event.eventType || 'competition',
-      registrationFee: event.registrationFee || 0,
+      registrationFees: event.registrationFees || {
+        solo: 0,
+        team: 0
+      },
       image: event.image || '',
       qrCode: event.qrCode || '',
       upiId: event.upiId || '',
       isTeamEvent: event.isTeamEvent || false,
+      teamSize: event.teamSize || { min: 1, max: 1 },
       capacity: event.capacity || 50,
-      teamSize: {
-        min: 1,
-        max: event.teamSize?.max || 1
-      },
       prizes: event.prizes || { first: '', second: '', third: '', other: '' },
       rules: event.rules || [],
       requirements: event.requirements || [],
-      aboutContent: event.aboutContent,
-      detailsContent: event.detailsContent,
+      aboutContent: event.aboutContent || '',
+      detailsContent: event.detailsContent || '',
       coordinators: event.coordinators || [],
-      startTime: event.startTime,
-      endTime: event.endTime,
+      startTime: event.startTime || '',
+      endTime: event.endTime || '',
       isActive: true
     });
     setFormErrors({});
@@ -431,7 +444,10 @@ const AdminEvents = () => {
         upiId: formData.upiId,
         eventType: formData.eventType,
         capacity: isNaN(formData.capacity) ? 50 : formData.capacity,
-        registrationFee: isNaN(formData.registrationFee) ? 0 : formData.registrationFee,
+        registrationFees: {
+          solo: isNaN(formData.registrationFees.solo) ? 0 : formData.registrationFees.solo,
+          team: isNaN(formData.registrationFees.team) ? 0 : formData.registrationFees.team
+        },
         isTeamEvent: formData.isTeamEvent,
         teamSize: {
           min: 1,
@@ -486,7 +502,10 @@ const AdminEvents = () => {
         upiId: formData.upiId,
         eventType: formData.eventType,
         capacity: isNaN(formData.capacity) ? 50 : formData.capacity,
-        registrationFee: isNaN(formData.registrationFee) ? 0 : formData.registrationFee,
+        registrationFees: {
+          solo: isNaN(formData.registrationFees.solo) ? 0 : formData.registrationFees.solo,
+          team: isNaN(formData.registrationFees.team) ? 0 : formData.registrationFees.team
+        },
         isTeamEvent: formData.isTeamEvent,
         teamSize: {
           min: 1,
@@ -667,7 +686,7 @@ const AdminEvents = () => {
                         <td className="p-4">
                           <div className="flex items-center font-medium text-gray-800">
                             <DollarSign size={14} className="mr-1 text-gray-500" />
-                            {event.registrationFee === 0 ? 'Free' : `₹${event.registrationFee}`}
+                            {event.registrationFees.solo === 0 ? 'Free' : `₹${event.registrationFees.solo}`}
                           </div>
                         </td>
                         <td className="p-4">
@@ -696,8 +715,8 @@ const AdminEvents = () => {
                               </Tooltip>
                             </TooltipProvider>
                           ) : (
-                            <div className={event.registrationFee > 0 ? "text-red-500 font-medium" : "text-gray-700 font-medium"}>
-                              {event.registrationFee > 0 ? "Missing" : "Not needed"}
+                            <div className={event.registrationFees.solo > 0 ? "text-red-500 font-medium" : "text-gray-700 font-medium"}>
+                              {event.registrationFees.solo > 0 ? "Missing" : "Not needed"}
                             </div>
                           )}
                         </td>
@@ -872,7 +891,7 @@ const AdminEvents = () => {
                 </div>
                 
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="eventType">Category</Label>
                   <Select 
                     value={formData.eventType} 
                     onValueChange={(value) => handleSelectChange('eventType', value)}
@@ -888,42 +907,62 @@ const AdminEvents = () => {
                   </Select>
                 </div>
                 
-                <div>
-                  <Label htmlFor="registrationFee" className="flex items-center justify-between">
-                    Registration Fee (₹)
-                    {formErrors.price && (
-                      <span className="text-red-400 text-xs">{formErrors.price}</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="registrationFee"
-                    name="registrationFee"
-                    type="number"
-                    min="0"
-                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
-                    value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
-                    onChange={handleNumberChange}
-                  />
+                <div className="col-span-2 grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="registrationFee-solo" className="flex items-center justify-between">
+                      Solo Registration Fee (₹)
+                      {formErrors.price && (
+                        <span className="text-red-400 text-xs">{formErrors.price}</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="registrationFee-solo"
+                      name="registrationFees.solo"
+                      type="number"
+                      min="0"
+                      className="bg-gray-700 border-gray-600 mt-1"
+                      value={isNaN(formData.registrationFees.solo) ? '' : formData.registrationFees.solo}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        const parsedValue = value === '' ? 0 : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          registrationFees: {
+                            ...prev.registrationFees,
+                            solo: isNaN(parsedValue) ? 0 : parsedValue
+                          }
+                        }));
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="registrationFee-team" className="flex items-center justify-between">
+                      Team Registration Fee (₹)
+                    </Label>
+                    <Input
+                      id="registrationFee-team"
+                      name="registrationFees.team"
+                      type="number"
+                      min="0"
+                      className="bg-gray-700 border-gray-600 mt-1"
+                      value={isNaN(formData.registrationFees.team) ? '' : formData.registrationFees.team}
+                      onChange={(e) => {
+                        const { value } = e.target;
+                        const parsedValue = value === '' ? 0 : parseInt(value, 10);
+                        setFormData(prev => ({
+                          ...prev,
+                          registrationFees: {
+                            ...prev.registrationFees,
+                            team: isNaN(parsedValue) ? 0 : parsedValue
+                          }
+                        }));
+                      }}
+                    />
+                  </div>
                 </div>
                 
-                <div className="col-span-2">
-                  <Label htmlFor="image" className="flex items-center justify-between">
-                    Image URL
-                    {formErrors.image && (
-                      <span className="text-red-400 text-xs">{formErrors.image}</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="image"
-                    name="image"
-                    placeholder="Enter image URL"
-                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
-                    value={formData.image}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                
-                {formData.registrationFee > 0 && (
+                {(formData.registrationFees.solo > 0 || formData.registrationFees.team > 0) && (
                   <div className="col-span-2">
                     <Label htmlFor="qrCode" className="flex items-center justify-between">
                       Payment QR Code URL
@@ -958,7 +997,7 @@ const AdminEvents = () => {
                   </div>
                 )}
                 
-                {formData.registrationFee > 0 && (
+                {(formData.registrationFees.solo > 0 || formData.registrationFees.team > 0) && (
                   <div className="col-span-2">
                     <Label htmlFor="upiId" className="flex items-center justify-between">
                       UPI ID
@@ -977,6 +1016,23 @@ const AdminEvents = () => {
                     <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
                   </div>
                 )}
+                
+                <div className="col-span-2">
+                  <Label htmlFor="image" className="flex items-center justify-between">
+                    Image URL
+                    {formErrors.image && (
+                      <span className="text-red-400 text-xs">{formErrors.image}</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="image"
+                    name="image"
+                    placeholder="Enter image URL"
+                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.image ? 'border-red-400' : ''}`}
+                    value={formData.image}
+                    onChange={handleInputChange}
+                  />
+                </div>
                 
                 <div className="flex items-center space-x-2">
                   <input
@@ -1430,24 +1486,6 @@ const AdminEvents = () => {
                   </Select>
                 </div>
                 
-                <div>
-                  <Label htmlFor="edit-registrationFee" className="flex items-center justify-between">
-                    Registration Fee (₹)
-                    {formErrors.price && (
-                      <span className="text-red-400 text-xs">{formErrors.price}</span>
-                    )}
-                  </Label>
-                  <Input
-                    id="edit-registrationFee"
-                    name="registrationFee"
-                    type="number"
-                    min="0"
-                    className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.price ? 'border-red-400' : ''}`}
-                    value={isNaN(formData.registrationFee) ? '' : formData.registrationFee}
-                    onChange={handleNumberChange}
-                  />
-                </div>
-                
                 <div className="col-span-2">
                   <Label htmlFor="edit-image" className="flex items-center justify-between">
                     Image URL
@@ -1464,61 +1502,6 @@ const AdminEvents = () => {
                     onChange={handleInputChange}
                   />
                 </div>
-                
-                {formData.registrationFee > 0 && (
-                  <div className="col-span-2">
-                    <Label htmlFor="edit-qrCode" className="flex items-center justify-between">
-                      Payment QR Code URL
-                      {formErrors.qrCode && (
-                        <span className="text-red-400 text-xs">{formErrors.qrCode}</span>
-                      )}
-                    </Label>
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        id="edit-qrCode"
-                        name="qrCode"
-                        placeholder="Enter payment QR code URL"
-                        className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
-                        value={formData.qrCode}
-                        onChange={handleInputChange}
-                      />
-                      {formData.qrCode && (
-                        <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
-                          <img 
-                            src={formData.qrCode} 
-                            alt="Payment QR Code Preview" 
-                            className="max-h-24 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
-                  </div>
-                )}
-                
-                {formData.registrationFee > 0 && (
-                  <div className="col-span-2">
-                    <Label htmlFor="edit-upiId" className="flex items-center justify-between">
-                      UPI ID
-                      {formErrors.upiId && (
-                        <span className="text-red-400 text-xs">{formErrors.upiId}</span>
-                      )}
-                    </Label>
-                    <Input
-                      id="edit-upiId"
-                      name="upiId"
-                      placeholder="Enter UPI ID (e.g., username@bankname)"
-                      className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.upiId ? 'border-red-400' : ''}`}
-                      value={formData.upiId}
-                      onChange={handleInputChange}
-                    />
-                    <p className="text-gray-400 text-xs mt-1">UPI ID is required for paid events</p>
-                  </div>
-                )}
                 
                 <div className="flex items-center space-x-2">
                   <input

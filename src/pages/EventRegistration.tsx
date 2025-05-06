@@ -26,7 +26,10 @@ interface Event {
   eventType: string;
   image: string;
   location: string;
-  registrationFee: number;
+  registrationFees?: {
+    solo: number;
+    team: number;
+  };
   isTeamEvent: boolean;
   teamSize: {
     min: number;
@@ -453,10 +456,10 @@ const EventRegistration = () => {
                 </div>
                 <div>
                   <span className="font-medium">Registration Fee:</span>{' '}
-                  {event.registrationFee === 0 ? (
-                    'Free'
+                  {event.isTeamEvent ? (
+                    event.registrationFees?.team === 0 ? 'Free' : <span>₹{event.registrationFees?.team}</span>
                   ) : (
-                    <span>₹{event.registrationFee}</span>
+                    event.registrationFees?.solo === 0 ? 'Free' : <span>₹{event.registrationFees?.solo}</span>
                   )}
                 </div>
                 <div>
@@ -724,158 +727,170 @@ const EventRegistration = () => {
                 
                 <TabsContent value="payment">
                   <div className="space-y-6">
-                    {event.registrationFee > 0 ? (
-                      <>
-                        <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300 mb-6">
-                          <h3 className="text-xl font-orbitron font-bold mb-4 text-gold">Payment Information</h3>
-                          
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="text-gray-300">Event Fee:</div>
-                              <div className="font-medium text-white">
-                                {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
+                    {((event.isTeamEvent && event.registrationFees?.team && event.registrationFees.team > 0) || 
+                      (!event.isTeamEvent && event.registrationFees?.solo && event.registrationFees.solo > 0)) ? (
+                        <>
+                          <div className="bg-black/20 backdrop-blur-sm p-6 rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300 mb-6">
+                            
+                            {/* Payment details section */}
+                            <div className="flex justify-between items-center mb-6">
+                              <div>
+                                <h3 className="text-xl font-bold mb-1">Payment Details</h3>
+                                <p className="text-gray-400 text-sm">Complete your registration by making the payment</p>
                               </div>
-                              
-                              {event.isTeamEvent && (
-                                <>
-                                  <div className="text-gray-400">Team Members:</div>
-                                  <div className="font-medium text-white">{watch('teamMembers')?.length || 0} + 1 (you)</div>
-                                </>
-                              )}
-                              
-                              <div className="text-gray-400">Payment Method:</div>
-                              <div className="font-medium text-white">UPI / Net Banking</div>
-                              
-                              <div className="col-span-2 border-t border-gray-700 my-2"></div>
-                              
-                              <div className="text-gray-400 font-medium">Total Amount:</div>
-                              <div className="font-bold text-gold text-xl">
-                                ₹{event.registrationFee}
+                              <div className="bg-black/30 px-3 py-1 rounded-full border border-gray-700">
+                                <span className="text-gray-300 text-sm">Step 2 of 2</span>
+                              </div>
+                            </div>
+                            
+                            {/* Payment summary */}
+                            <div className="bg-black/40 rounded-lg p-4 mb-6">
+                              <h4 className="font-semibold mb-4 text-gray-100">Payment Summary</h4>
+                              <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                  <div className="text-gray-300">Event Fee:</div>
+                                  <div className="font-medium text-white">
+                                    {event.isTeamEvent ? 
+                                      (event.registrationFees?.team && event.registrationFees.team > 0 ? 
+                                        `₹${event.registrationFees.team}` : 'Free') : 
+                                      (event.registrationFees?.solo && event.registrationFees.solo > 0 ? 
+                                        `₹${event.registrationFees.solo}` : 'Free')
+                                    }
+                                  </div>
+                                </div>
+                                
+                                <Separator className="bg-gray-800/50" />
+                                
+                                <div className="flex justify-between items-center">
+                                  <div className="text-gray-400 font-medium">Total Amount:</div>
+                                  <div className="font-bold text-gold text-xl">
+                                    ₹{event.isTeamEvent ? event.registrationFees?.team : event.registrationFees?.solo}
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="mb-6">
-                          <div className="flex justify-center mb-4">
-                            <div className="bg-white p-6 rounded-lg max-w-[220px] shadow-[0_0_20px_rgba(255,215,0,0.2)] animate-pulse-slow hover:shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all duration-500">
-                              <img 
-                                src={event.qrCode || siteSettings.paymentQrCode || "/payment-qr.png"} 
-                                alt="Payment QR Code" 
-                                className="w-full h-auto rounded-md"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = "https://via.placeholder.com/200x200?text=Payment+QR+Code";
-                                }}
+                          
+                          <div className="mb-6">
+                            <div className="flex justify-center mb-4">
+                              <div className="bg-white p-6 rounded-lg max-w-[220px] shadow-[0_0_20px_rgba(255,215,0,0.2)] animate-pulse-slow hover:shadow-[0_0_30px_rgba(255,215,0,0.3)] transition-all duration-500">
+                                <img 
+                                  src={event.qrCode || siteSettings.paymentQrCode || "/payment-qr.png"} 
+                                  alt="Payment QR Code" 
+                                  className="w-full h-auto rounded-md"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = "https://via.placeholder.com/200x200?text=Payment+QR+Code";
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="text-center mb-4">
+                              <p className="text-gray-300 mb-1">Scan the QR code or use the following details:</p>
+                              <p className="font-medium text-gold text-lg animate-text-glow">UPI: {event.upiId || siteSettings.upiId}</p>
+                              <p className="text-sm text-gray-400 mt-2">Please mention your name and event in payment description</p>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <Label htmlFor="transactionId" className="text-gold">Transaction ID <span className="text-red-500">*</span></Label>
+                              <Input
+                                id="transactionId"
+                                placeholder="Enter UPI reference ID / Transaction ID"
+                                className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
+                                {...register('transactionId')}
+                              />
+                              {errors.transactionId && (
+                                <p className="text-red-500 text-sm mt-1">{errors.transactionId.message}</p>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="paymentScreenshot" className="text-gold">Payment Screenshot <span className="text-red-500">*</span></Label>
+                              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700/50 border-dashed rounded-md hover:border-gold/50 transition-colors duration-300 group bg-black/20 backdrop-blur-sm">
+                                <div className="space-y-1 text-center">
+                                  {imagePreview ? (
+                                    <div className="mb-3">
+                                      <img src={imagePreview} alt="Payment Screenshot Preview" className="mx-auto h-32 object-contain rounded-md shadow-lg" />
+                                      <p className="text-gold text-xs mt-2 animate-pulse-slow">Screenshot uploaded</p>
+                                    </div>
+                                  ) : (
+                                    <Upload className="mx-auto h-12 w-12 text-gray-400 group-hover:text-gold transition-colors duration-200" />
+                                  )}
+                                  
+                                  <div className="flex text-sm text-gray-400">
+                                    <label
+                                      htmlFor="file-upload"
+                                      className="relative cursor-pointer rounded-md font-medium text-gold hover:text-amber-400 focus-within:outline-none"
+                                    >
+                                      <span>Upload a file</span>
+                                      <input
+                                        id="file-upload"
+                                        name="file-upload"
+                                        type="file"
+                                        className="sr-only"
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                      />
+                                    </label>
+                                    <p className="pl-1">or drag and drop</p>
+                                  </div>
+                                  <p className="text-xs text-gray-500">
+                                    PNG, JPG, GIF up to 5MB
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <Label htmlFor="additionalInfo" className="text-gold">Additional Information (Optional)</Label>
+                              <Textarea
+                                id="additionalInfo"
+                                placeholder="Any special requirements or information you'd like to share"
+                                className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
+                                {...register('additionalInfo')}
                               />
                             </div>
                           </div>
-                          
-                          <div className="text-center mb-4">
-                            <p className="text-gray-300 mb-1">Scan the QR code or use the following details:</p>
-                            <p className="font-medium text-gold text-lg animate-text-glow">UPI: {event.upiId || siteSettings.upiId}</p>
-                            <p className="text-sm text-gray-400 mt-2">Please mention your name and event in payment description</p>
+                        </>
+                      ) : (
+                        <div className="text-center py-8 bg-black/20 backdrop-blur-sm rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300">
+                          <div className="bg-green-500/10 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
+                            <CheckCircle className="h-10 w-10 text-green-400" />
                           </div>
+                          <h3 className="text-xl font-orbitron font-bold mb-2 text-gold">Free Registration</h3>
+                          <p className="text-gray-300 mb-4 max-w-md mx-auto">
+                            This event has no registration fee. Click the register button below to complete your registration.
+                          </p>
                         </div>
-                        
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="transactionId" className="text-gold">Transaction ID <span className="text-red-500">*</span></Label>
-                            <Input
-                              id="transactionId"
-                              placeholder="Enter UPI reference ID / Transaction ID"
-                              className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
-                              {...register('transactionId')}
-                            />
-                            {errors.transactionId && (
-                              <p className="text-red-500 text-sm mt-1">{errors.transactionId.message}</p>
-                            )}
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="paymentScreenshot" className="text-gold">Payment Screenshot <span className="text-red-500">*</span></Label>
-                            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-700/50 border-dashed rounded-md hover:border-gold/50 transition-colors duration-300 group bg-black/20 backdrop-blur-sm">
-                              <div className="space-y-1 text-center">
-                                {imagePreview ? (
-                                  <div className="mb-3">
-                                    <img src={imagePreview} alt="Payment Screenshot Preview" className="mx-auto h-32 object-contain rounded-md shadow-lg" />
-                                    <p className="text-gold text-xs mt-2 animate-pulse-slow">Screenshot uploaded</p>
-                                  </div>
-                                ) : (
-                                  <Upload className="mx-auto h-12 w-12 text-gray-400 group-hover:text-gold transition-colors duration-200" />
-                                )}
-                                
-                                <div className="flex text-sm text-gray-400">
-                                  <label
-                                    htmlFor="file-upload"
-                                    className="relative cursor-pointer rounded-md font-medium text-gold hover:text-amber-400 focus-within:outline-none"
-                                  >
-                                    <span>Upload a file</span>
-                                    <input
-                                      id="file-upload"
-                                      name="file-upload"
-                                      type="file"
-                                      className="sr-only"
-                                      accept="image/*"
-                                      onChange={handleFileChange}
-                                    />
-                                  </label>
-                                  <p className="pl-1">or drag and drop</p>
-                                </div>
-                                <p className="text-xs text-gray-500">
-                                  PNG, JPG, GIF up to 5MB
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="additionalInfo" className="text-gold">Additional Information (Optional)</Label>
-                            <Textarea
-                              id="additionalInfo"
-                              placeholder="Any special requirements or information you'd like to share"
-                              className="bg-black/30 border-gray-700/50 focus:border-gold/70 focus:ring-1 focus:ring-gold/50 text-gray-100 placeholder:text-gray-500 mt-1 transition-all duration-200"
-                              {...register('additionalInfo')}
-                            />
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center py-8 bg-black/20 backdrop-blur-sm rounded-lg border border-gray-800/50 shadow-lg hover:shadow-gold/10 transition-all duration-300">
-                        <div className="bg-green-500/10 w-20 h-20 mx-auto rounded-full flex items-center justify-center mb-4">
-                          <CheckCircle className="h-10 w-10 text-green-400" />
-                        </div>
-                        <h3 className="text-xl font-orbitron font-bold mb-2 text-gold">Free Registration</h3>
-                        <p className="text-gray-300 mb-4 max-w-md mx-auto">
-                          This event has no registration fee. Click the register button below to complete your registration.
-                        </p>
+                      )}
+                      
+                      <div className="flex justify-between">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => setCurrentTab(event.isTeamEvent ? "team" : "details")}
+                          className="border-gray-700/50 hover:border-gold/70 hover:text-gold transition-all duration-200"
+                        >
+                          Back
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          className="bg-gradient-to-r from-gold/90 to-amber-500/90 hover:from-gold hover:to-amber-500 text-black font-medium rounded-full px-6 py-2 hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
+                          disabled={submitting || !isValid}
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Submitting...
+                            </>
+                          ) : (
+                            'Complete Registration'
+                          )}
+                        </Button>
                       </div>
-                    )}
-                    
-                    <div className="flex justify-between">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setCurrentTab(event.isTeamEvent ? "team" : "details")}
-                        className="border-gray-700/50 hover:border-gold/70 hover:text-gold transition-all duration-200"
-                      >
-                        Back
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        className="bg-gradient-to-r from-gold/90 to-amber-500/90 hover:from-gold hover:to-amber-500 text-black font-medium rounded-full px-6 py-2 hover:shadow-lg hover:shadow-gold/20 transition-all duration-300"
-                        disabled={submitting || !isValid}
-                      >
-                        {submitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Submitting...
-                          </>
-                        ) : (
-                          'Complete Registration'
-                        )}
-                      </Button>
-                    </div>
                   </div>
                 </TabsContent>
               </form>

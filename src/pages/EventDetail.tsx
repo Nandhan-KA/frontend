@@ -34,6 +34,10 @@ interface Event {
   image: string;
   location: string;
   registrationFee: number;
+  registrationFees?: {
+    solo: number;
+    team: number;
+  };
   isTeamEvent: boolean;
   teamSize: {
     min: number;
@@ -180,10 +184,33 @@ const EventDetail = () => {
                 Team Size: {event.teamSize.min}-{event.teamSize.max}
               </span>
             )}
-            <span className="text-sm font-medium bg-green-600/20 text-green-400 px-3 py-1 rounded-full flex items-center">
-              <CircleDollarSign size={14} className="mr-1.5" />
-              {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free Entry'}
-            </span>
+            {event.registrationFees ? (
+              <>
+                {event.registrationFees.solo > 0 && (
+                  <span className="text-sm font-medium bg-green-600/20 text-green-400 px-3 py-1 rounded-full flex items-center">
+                    <CircleDollarSign size={14} className="mr-1.5" />
+                    Solo: ₹{event.registrationFees.solo}
+                  </span>
+                )}
+                {event.registrationFees.team > 0 && (
+                  <span className="text-sm font-medium bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full flex items-center">
+                    <CircleDollarSign size={14} className="mr-1.5" />
+                    Team: ₹{event.registrationFees.team}
+                  </span>
+                )}
+                {event.registrationFees.solo === 0 && event.registrationFees.team === 0 && (
+                  <span className="text-sm font-medium bg-green-600/20 text-green-400 px-3 py-1 rounded-full flex items-center">
+                    <CircleDollarSign size={14} className="mr-1.5" />
+                    Free Entry
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-sm font-medium bg-green-600/20 text-green-400 px-3 py-1 rounded-full flex items-center">
+                <CircleDollarSign size={14} className="mr-1.5" />
+                {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free Entry'}
+              </span>
+            )}
             {event.date && (
               <span className="text-sm font-medium bg-purple-600/20 text-purple-400 px-3 py-1 rounded-full flex items-center">
                 <Calendar size={14} className="mr-1.5" />
@@ -359,17 +386,34 @@ const EventDetail = () => {
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold mb-2 text-gray-100">Registration Fee</h3>
-                          {event.registrationFee === 0 ? (
+                          {event.registrationFee === 0 && (!event.registrationFees || (event.registrationFees.solo === 0 && event.registrationFees.team === 0)) ? (
                             <p className="text-gray-100 text-sm">
                               <span className="text-green-300 font-medium">Free Entry</span>
                             </p>
                           ) : (
-                            <p className="text-gray-100 text-sm">
-                              <span className="text-gray-300 mr-2">Fee:</span> ₹{event.registrationFee} per {event.isTeamEvent ? 'team' : 'person'}
-                            </p>
+                            <div>
+                              {event.registrationFees ? (
+                                <>
+                                  {event.registrationFees.solo > 0 && (
+                                    <p className="text-gray-100 text-sm mb-1">
+                                      <span className="text-gray-300 mr-2">Solo:</span> ₹{event.registrationFees.solo} per person
+                                    </p>
+                                  )}
+                                  {event.registrationFees.team > 0 && (
+                                    <p className="text-gray-100 text-sm">
+                                      <span className="text-gray-300 mr-2">Team:</span> ₹{event.registrationFees.team} per team
+                                    </p>
+                                  )}
+                                </>
+                              ) : (
+                                <p className="text-gray-100 text-sm">
+                                  <span className="text-gray-300 mr-2">Fee:</span> ₹{event.registrationFee} per {event.isTeamEvent ? 'team' : 'person'}
+                                </p>
+                              )}
+                            </div>
                           )}
                           
-                          {event.registrationFee > 0 && event.upiId && (
+                          {((event.registrationFee > 0 || (event.registrationFees && (event.registrationFees.solo > 0 || event.registrationFees.team > 0))) && event.upiId) && (
                             <p className="text-gray-200 text-xs mt-2 flex items-center">
                               <CircleDollarSign size={12} className="mr-1 text-gold/70" />
                               Payment via UPI: {event.upiId}
@@ -594,10 +638,34 @@ const EventDetail = () => {
                       <CircleDollarSign size={14} className="mr-2 text-gold" />
                       Registration Fee:
                     </p>
-                    {event.registrationFee > 0 && (
-                      <p className="text-sm text-gray-100 ml-6 mt-1">
-                        <span className="font-semibold">₹{event.registrationFee}</span>
-                      </p>
+                    {event.registrationFees ? (
+                      <div className="ml-6 mt-1">
+                        {event.registrationFees.solo > 0 && (
+                          <p className="text-sm text-gray-100">
+                            <span className="text-xs text-gray-400">Solo:</span> <span className="font-semibold">₹{event.registrationFees.solo}</span>
+                          </p>
+                        )}
+                        {event.registrationFees.team > 0 && (
+                          <p className="text-sm text-gray-100 mt-1">
+                            <span className="text-xs text-gray-400">Team:</span> <span className="font-semibold">₹{event.registrationFees.team}</span>
+                          </p>
+                        )}
+                        {event.registrationFees.solo === 0 && event.registrationFees.team === 0 && (
+                          <p className="text-sm text-gray-100">
+                            <span className="font-semibold text-green-400">Free Entry</span>
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      event.registrationFee > 0 ? (
+                        <p className="text-sm text-gray-100 ml-6 mt-1">
+                          <span className="font-semibold">₹{event.registrationFee}</span>
+                        </p>
+                      ) : (
+                        <p className="text-sm text-gray-100 ml-6 mt-1">
+                          <span className="font-semibold text-green-400">Free Entry</span>
+                        </p>
+                      )
                     )}
                     {event.qrCode && (
                       <div className="mt-2">
@@ -645,10 +713,18 @@ const EventDetail = () => {
                     <div className="p-4 text-center">
                       <p className="text-gray-200 text-xs mb-1">Entry</p>
                       <p className="font-semibold text-white">
-                        {event.registrationFee === 0 ? (
+                        {event.registrationFee === 0 && (!event.registrationFees || (event.registrationFees.solo === 0 && event.registrationFees.team === 0)) ? (
                           'Free'
                         ) : (
-                          <span className="text-gray-300 mr-2">₹{event.registrationFee}</span>
+                          event.registrationFees ? (
+                            <span className="text-gray-300 text-sm">
+                              {event.registrationFees.solo > 0 && event.registrationFees.team > 0 ? 
+                                'From ₹' + Math.min(event.registrationFees.solo, event.registrationFees.team) : 
+                                event.registrationFees.solo > 0 ? '₹' + event.registrationFees.solo : '₹' + event.registrationFees.team}
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 mr-2">₹{event.registrationFee}</span>
+                          )
                         )}
                       </p>
                     </div>
