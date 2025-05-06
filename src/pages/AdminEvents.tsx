@@ -365,8 +365,11 @@ const AdminEvents = () => {
     
     if (isPaid && !formData.qrCode?.trim()) {
       errors.qrCode = "QR code is required for paid events";
-    } else if (formData.qrCode && !isValidUrl(formData.qrCode)) {
-      errors.qrCode = "Please enter a valid URL for QR code";
+    } else if (formData.qrCode && formData.qrCode.trim() !== '') {
+      const qrCodeValidation = isValidQrCodeUrl(formData.qrCode);
+      if (!qrCodeValidation.isValid) {
+        errors.qrCode = qrCodeValidation.message || "Invalid QR code URL";
+      }
     }
     
     if (isPaid && !formData.upiId?.trim()) {
@@ -383,6 +386,49 @@ const AdminEvents = () => {
       return true;
     } catch (error) {
       return false;
+    }
+  };
+
+  // Enhanced validation for QR code URLs to prevent security issues
+  const isValidQrCodeUrl = (url: string): { isValid: boolean; message?: string } => {
+    // First check if it's a valid URL
+    try {
+      const parsedUrl = new URL(url);
+      
+      // Must be https for security
+      if (parsedUrl.protocol !== 'https:') {
+        return {
+          isValid: false,
+          message: 'QR code URL must use HTTPS for security'
+        };
+      }
+
+      // Only allow trusted domains for payment QR codes
+      const trustedDomains = [
+        'imagekit.io',
+        'cloudinary.com',
+        'amazonaws.com',
+        'techshethra.com',
+        'drive.google.com',
+        'via.placeholder.com'
+      ];
+      
+      const hostname = parsedUrl.hostname;
+      const isDomainTrusted = trustedDomains.some(domain => hostname.includes(domain));
+      
+      if (!isDomainTrusted) {
+        return {
+          isValid: false,
+          message: 'QR code URL must be from a trusted domain'
+        };
+      }
+      
+      return { isValid: true };
+    } catch (error) {
+      return {
+        isValid: false,
+        message: 'Invalid URL format'
+      };
     }
   };
 
@@ -1628,29 +1674,71 @@ const AdminEvents = () => {
                       )}
                     </Label>
                     <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        id="edit-qrCode"
-                        name="qrCode"
-                        placeholder="Enter payment QR code URL"
-                        className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
-                        value={formData.qrCode}
-                        onChange={handleInputChange}
-                      />
-                      {formData.qrCode && (
-                        <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
-                          <img 
-                            src={formData.qrCode} 
-                            alt="Payment QR Code Preview" 
-                            className="max-h-24 object-contain"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
-                            }}
+                      {currentEvent && currentEvent.qrCode && currentEvent.qrCode.trim() !== '' ? (
+                        <>
+                          <div className="relative">
+                            <Input
+                              id="edit-qrCode"
+                              name="qrCode"
+                              placeholder="QR code is locked for security"
+                              className="bg-gray-800 border-gray-600 mt-1 text-gray-500 cursor-not-allowed"
+                              value={formData.qrCode}
+                              readOnly
+                            />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <div className="bg-amber-900/30 text-amber-500 p-2 text-xs rounded border border-amber-700 mb-2">
+                              QR codes cannot be modified once set for security reasons.
+                            </div>
+                            {formData.qrCode && (
+                              <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900 mt-auto">
+                                <img 
+                                  src={formData.qrCode} 
+                                  alt="Payment QR Code Preview" 
+                                  className="max-h-24 object-contain"
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = "https://via.placeholder.com/200x200?text=QR+Locked";
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Input
+                            id="edit-qrCode"
+                            name="qrCode"
+                            placeholder="Enter payment QR code URL"
+                            className={`bg-gray-700 border-gray-600 mt-1 ${formErrors.qrCode ? 'border-red-400' : ''}`}
+                            value={formData.qrCode}
+                            onChange={handleInputChange}
                           />
-                        </div>
+                          {formData.qrCode && (
+                            <div className="flex items-center justify-center border border-gray-600 rounded-md p-2 bg-gray-900">
+                              <img 
+                                src={formData.qrCode} 
+                                alt="Payment QR Code Preview" 
+                                className="max-h-24 object-contain"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = "https://via.placeholder.com/200x200?text=Invalid+QR";
+                                }}
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
-                    <p className="text-gray-400 text-xs mt-1">QR code is required for paid events</p>
+                    <p className="text-gray-400 text-xs mt-1">{currentEvent && currentEvent.qrCode && currentEvent.qrCode.trim() !== '' ? 
+                      'QR code is locked for security - contact system administrator if changes are required' : 
+                      'QR code is required for paid events and cannot be changed once set'}</p>
                   </div>
                 )}
                 
